@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from apps.study import importer
+from apps.core import importer
 
 
 class Command(BaseCommand):

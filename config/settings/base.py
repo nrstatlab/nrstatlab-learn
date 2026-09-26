@@ -19,6 +19,8 @@ SITE_ROOT_DIR = Path(env("SITE_ROOT_DIR", default=str(BASE_DIR / "var" / "site_r
 # The public origin every canonical URL is written against. Until the new domain
 # exists this is the current site, so rendered pages stay identical to it.
 SITE_ORIGIN = env("SITE_ORIGIN", default="https://nrstatlab.github.io/planning-for-future").rstrip("/")
+# The path the site is served under on SITE_ORIGIN's host. The app serves it at the root.
+SITE_BASE_PATH = env("SITE_BASE_PATH", default="/")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
