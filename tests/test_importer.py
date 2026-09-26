@@ -60,3 +60,16 @@ def test_rewrite_moves_the_site_to_a_new_origin_and_root():
             '<link href="/planning-for-future/assets/x.css">')
     out = rewrite_for_origin(html, origin="https://example.in", base="/")
     assert out == '<link rel="canonical" href="https://example.in/a.html"><link href="/assets/x.css">'
+
+
+def test_the_content_submodule_is_left_exactly_as_checked_out(source):
+    """Nothing in this application may change the content repository's files.
+
+    This happened once: `django-admin startproject config .` runs Black over the whole
+    target directory when Black is installed, and it reformatted 264 of the content's
+    Python files inside the submodule. The importer now also writes no bytecode there."""
+    import subprocess
+
+    status = subprocess.run(["git", "status", "--porcelain"], cwd=source.root,
+                            capture_output=True, text=True, check=True).stdout
+    assert status == "", f"the content submodule was modified:\n{status[:500]}"

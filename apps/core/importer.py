@@ -49,10 +49,16 @@ class ImportError_(Exception):
 # ---------------------------------------------------------------- sources
 
 def _load(path: Path, name: str):
-    spec = importlib.util.spec_from_file_location(name, path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    """Load one of the content repository's tools. No bytecode is written, so the
+    content submodule stays exactly as checked out."""
+    before, sys.dont_write_bytecode = sys.dont_write_bytecode, True
+    try:
+        spec = importlib.util.spec_from_file_location(name, path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    finally:
+        sys.dont_write_bytecode = before
 
 
 @dataclass
