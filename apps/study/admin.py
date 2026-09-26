@@ -20,8 +20,8 @@ class RenderedPageAdmin(admin.ModelAdmin):
     # it is read-only here.
     list_display = ["legacy_path", "title", "has_math", "updated_at"]
     search_fields = ["legacy_path", "title"]
-    readonly_fields = ["legacy_path", "title", "description", "head_html", "body_html", "body_class",
-                       "has_math", "content_hash", "updated_at"]
+    readonly_fields = ["legacy_path", "title", "description", "head_html", "nav_html", "body_html",
+                       "foot_html", "shell", "indexed", "has_math", "content_hash", "updated_at"]
 
 
 @admin.register(Unit)

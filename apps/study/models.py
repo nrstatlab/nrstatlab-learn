@@ -35,14 +35,24 @@ class RenderedPage(models.Model):
 
     legacy_path is the path from the site root, e.g. statistics/sampling-theory/unit2.html.
     It is the URL the page is served at and the page id progress.js already uses.
+
+    A page is stored in the parts every generated page already marks: the <head>,
+    the navigation (<!-- site-nav … --> … <!-- /site-nav -->), the body, and the
+    footer (<!-- site-foot … --> … <!-- /site-foot -->). `shell` holds the text
+    between them, so the parts put back together give the original file byte for
+    byte (study.importer.assemble). Pages without the markers (the lab demos, 404)
+    are stored whole in body_html with shell {"raw": true}.
     """
 
     legacy_path = models.CharField(max_length=300, unique=True)
     title = models.CharField(max_length=300)
     description = models.TextField(blank=True)
     head_html = models.TextField(blank=True)
+    nav_html = models.TextField(blank=True)
     body_html = models.TextField()
-    body_class = models.CharField(max_length=200, blank=True)
+    foot_html = models.TextField(blank=True)
+    shell = models.JSONField(default=dict)
+    indexed = models.BooleanField(default=True, help_text="Listed in the sitemap")
     has_math = models.BooleanField(default=False)
     content_hash = models.CharField(max_length=64)
     published = models.BooleanField(default=True)
