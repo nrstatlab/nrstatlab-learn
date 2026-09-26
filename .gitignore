@@ -1,0 +1,17 @@
+# Secrets and local settings
+.env
+*.env
+!.env.example
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+# Build output
+staticfiles/
+var/
+media/
+node_modules/
