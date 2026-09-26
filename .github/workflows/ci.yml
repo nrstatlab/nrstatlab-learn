@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: nrstatlab
+          POSTGRES_USER: nrstatlab
+          POSTGRES_PASSWORD: ci-only
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U nrstatlab" --health-interval 5s --health-retries 10
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+      SECRET_KEY: ci-only-not-a-secret
+      DATABASE_URL: postgres://nrstatlab:ci-only@localhost:5432/nrstatlab
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check .
+      - name: Django checks
+        run: |
+          python manage.py check
+          DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py check --deploy
+      - name: No missing migrations
+        run: python manage.py makemigrations --check --dry-run
+      - name: The content imports cleanly (dry run)
+        run: python manage.py import_site --dry-run
+      - name: Tests (every page, every redirect, every site file, boundaries)
+        run: pytest --cov --cov-report=term-missing:skip-covered
