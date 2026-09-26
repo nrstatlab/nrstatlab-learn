@@ -1,0 +1,26 @@
+# Development only. Production runs on a managed platform (ARCHITECTURE.md, decision 2).
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: nrstatlab
+      POSTGRES_USER: nrstatlab
+      POSTGRES_PASSWORD: dev-only
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nrstatlab"]
+      interval: 5s
+      retries: 10
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://nrstatlab:dev-only@db:5432/nrstatlab
+    volumes: [".:/app"]
+    ports: ["8000:8000"]
+    depends_on:
+      db: { condition: service_healthy }
+volumes:
+  pgdata: {}
