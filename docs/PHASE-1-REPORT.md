@@ -38,7 +38,7 @@ A second run changes nothing.
 
 ## Checks run
 
-- **pytest: 19 passed.** Coverage is 94% overall: importer 93%, views 100%, services 94%.
+- **pytest: 20 passed.** Coverage is 94% overall: importer 93%, views 100%, services 94%.
   - Every indexed page is byte-identical; the other 18 pages still work.
   - Every redirect is a 301 to a live page.
   - Folders behave as on GitHub Pages; the 404 page is served with its paths rewritten.
@@ -46,6 +46,7 @@ A second run changes nothing.
   - The import is idempotent and refuses a count mismatch.
   - Stub targets resolve; the origin rewrite works.
   - The dependency graph is respected and has no cycles.
+  - The content submodule is left exactly as checked out.
 - **Mutation tests.** Each of these was made to fail on purpose, and each was caught:
   - a page off by one character;
   - a 302 instead of a 301;
@@ -61,6 +62,19 @@ A second run changes nothing.
 - **`check --deploy` with the prod settings.** Only the warning about the placeholder secret key,
   which is expected.
 - **Screenshots** at 390 px and 1280 px of the home page and a unit: no horizontal scroll.
+
+## Incident, found and fixed within the phase
+
+`django-admin startproject config .` runs the Black formatter over its whole target directory when
+Black is installed, and the target held the content submodule.
+- **What happened.** Black reformatted 264 Python files inside `content/`. No HTML page was touched,
+  so no stored page was ever wrong. 188 of the files are served (lab programs), and until the fix
+  their served copies were the reformatted versions.
+- **The fix.** The submodule was restored to its pinned commit, and the served copies were
+  re-copied from the originals.
+- **The guard.** A test now fails if the submodule's `git status` is not empty; a one-line edit
+  makes it fail. The importer also no longer writes bytecode into the submodule.
+- **Nothing reached any remote.** The content repository's own clone was never affected.
 
 ## Decisions taken during the phase
 
