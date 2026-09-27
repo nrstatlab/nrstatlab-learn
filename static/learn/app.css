@@ -1,0 +1,74 @@
+/* NRSTATLAB Learn: the application's own pages (dashboard, sign-in, privacy),
+   drawn with the site's stylesheets and these few additions. */
+
+.app-skip { position: absolute; left: -9999px; top: 0; z-index: 200; background: #0f4c81; color: #fff;
+  padding: 10px 16px; text-decoration: none; }
+.app-skip:focus { left: 0; }
+
+body.app-page { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+main.app { max-width: 760px; margin: 0 auto; padding: 28px 16px 40px; box-sizing: border-box; }
+main.app:focus { outline: none; }
+main.app h1 { font-size: 1.9rem; line-height: 1.25; margin: 6px 0 18px; color: var(--nl-blue); }
+main.app h2 { font-size: 1.25rem; margin: 28px 0 10px; color: var(--nl-blue); }
+main.app p, main.app li { line-height: 1.6; }
+.app-lead { font-size: 1.08rem; }
+.app-quiet { color: var(--nl-ink-soft); font-size: .95rem; }
+
+.app-card { background: var(--nl-card); border: 1px solid var(--nl-line); border-radius: 12px;
+  padding: 14px 18px; margin: 0 0 14px; }
+main.app .app-card h2 { margin-top: 0; }
+.app-courses, .app-links { list-style: none; padding: 0; margin: 0; }
+.app-links li { margin: 6px 0; }
+.app-course-title { font-weight: 600; }
+.app-bar { height: 8px; border-radius: 999px; background: var(--nl-line); margin: 10px 0 6px; overflow: hidden; }
+.app-bar span { display: block; height: 100%; background: #047857; border-radius: 999px; }
+.app-streak { margin: 8px 0 0; font-weight: 600; color: #047857; }
+
+.app-messages { list-style: none; padding: 0; margin: 0 0 16px; }
+.app-message { background: #eef5fb; border: 1px solid #b9d3ea; border-radius: 10px; padding: 10px 14px; margin: 0 0 8px; }
+.app-message-error { background: #fdf0ec; border-color: #f0b7a4; }
+
+/* Forms: allauth's and ours. */
+main.app form p { margin: 0 0 14px; }
+main.app label { display: block; font-weight: 600; margin: 0 0 4px; }
+/* Django writes a checkbox's label before it; show the box first, on the same line. */
+main.app form p:has(> input[type=checkbox]) { display: flex; flex-direction: row-reverse; justify-content: flex-end;
+  align-items: center; gap: 10px; }
+main.app form p:has(> input[type=checkbox]) label { margin: 0; }
+main.app input[type=checkbox] { width: 20px; height: 20px; margin: 0; flex: none; }
+main.app input[type=email], main.app input[type=password], main.app input[type=text] {
+  width: 100%; max-width: 420px; box-sizing: border-box; font: inherit; padding: 10px 12px;
+  border: 1px solid #b9cadb; border-radius: 8px; background: #fff; color: #10233a;
+}
+main.app input:focus { outline: 2px solid #1565a8; outline-offset: 1px; border-color: #1565a8; }
+main.app .helptext, main.app form span { display: block; font-size: .9rem; color: var(--nl-ink-soft); margin-top: 4px; }
+main.app .errorlist { list-style: none; padding: 0; margin: 0 0 6px; color: #b42318; font-weight: 600; }
+main.app button, main.app form a[href].button {
+  font: inherit; font-weight: 600; cursor: pointer; padding: 9px 18px; border-radius: 999px;
+  border: 1px solid #1565a8; background: #1565a8; color: #fff;
+}
+main.app button:focus-visible { outline: 3px solid #17659f; outline-offset: 2px; }
+main.app button.app-secondary { background: var(--nl-card); color: #1565a8; margin-top: 10px; }
+main.app button.app-danger { background: #b42318; border-color: #b42318; }
+.app-cancel { margin-left: 12px; }
+.app-account form { margin-top: 12px; }
+
+.app-foot-note { max-width: 760px; margin: 0 auto 10px; padding: 0 16px; box-sizing: border-box;
+  font-size: .92rem; color: var(--nl-ink-soft); }
+
+@media (prefers-color-scheme: dark) {
+  main.app h1, main.app h2 { color: #b1d2ef; }
+  .app-quiet, .app-foot-note, main.app .helptext, main.app form span { color: #bbc3cf; }
+  .app-card { background: #18222a; border-color: #2a3d5b; }
+  .app-bar { background: #2a3d5b; }
+  .app-bar span, .app-streak { background-color: #34d399; }
+  .app-streak { background: none; color: #6ee7b7; }
+  .app-message { background: #1c283b; border-color: #2a3d5b; }
+  .app-message-error { background: #3a1f1a; border-color: #7a3b2e; }
+  main.app input[type=email], main.app input[type=password], main.app input[type=text] {
+    background: #172133; color: #c9d5ea; border-color: #3a5170; }
+  main.app .errorlist { color: #fca5a5; }
+  main.app button { background: #a8cfed; border-color: #a8cfed; color: #10233a; }
+  main.app button.app-secondary { background: #18222a; color: #a8cfed; }
+  main.app button.app-danger { background: #f87171; border-color: #f87171; color: #10233a; }
+}

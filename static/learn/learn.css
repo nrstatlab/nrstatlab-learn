@@ -1,0 +1,49 @@
+/* NRSTATLAB Learn: what the application adds to the site's pages. The account
+   link in the bar, the offer to bring over browser progress, and the note under
+   a toggle that could not be saved. Colours are the site's own (site-base.css). */
+
+.sitenav a.sitenav-account { display: inline-flex; align-items: center; }
+.sitenav-account .sitenav-icon { margin-right: 6px; }
+/* The last item: after the search on most pages, after "Which test?" on the home page. */
+.sitenav-in > a.sitenav-plain + a.sitenav-account { margin-left: auto; }
+
+/* Narrower than a wide screen, the account is an icon, as the search is. */
+@media (max-width: 960px) {
+  .sitenav-account span {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  .sitenav-account .sitenav-icon { margin-right: 0; }
+}
+/* On a phone it sits in the first row, beside the search icon. */
+@media (max-width: 720px) {
+  .sitenav-in > a.sitenav-account { order: 1; }
+}
+
+.learn-banner {
+  max-width: 1148px; margin: 14px auto; padding: 12px 16px; box-sizing: border-box;
+  background: #eef5fb; border: 1px solid #b9d3ea; border-radius: 10px; color: #16233a;
+  font: 15px/1.5 "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+}
+.learn-banner p { margin: 0; flex: 1 1 320px; max-width: none; }
+.learn-banner button {
+  font: inherit; font-weight: 600; cursor: pointer; padding: 7px 14px; border-radius: 999px;
+  border: 1px solid #1565a8;
+}
+.learn-banner .learn-yes { background: #1565a8; color: #fff; }
+.learn-banner .learn-no { background: #fff; color: #1565a8; }
+.learn-banner button:focus-visible { outline: 3px solid #17659f; outline-offset: 2px; }
+.learn-banner button[disabled] { opacity: .6; cursor: default; }
+@media (max-width: 1180px) { .learn-banner { margin-left: 16px; margin-right: 16px; } }
+
+.learn-note { display: inline-block; margin-left: 10px; font-size: .9rem; color: #9a3412; }
+.learn-banner .learn-note { margin-left: 0; flex-basis: 100%; }
+
+@media (prefers-color-scheme: dark) {
+  .learn-banner { background: #1c283b; border-color: #2a3d5b; color: #c9d5ea; }
+  .learn-banner .learn-yes { background: #a8cfed; border-color: #a8cfed; color: #10233a; }
+  .learn-banner .learn-no { background: #18222a; border-color: #a8cfed; color: #a8cfed; }
+  .learn-note { color: #fdba74; }
+}
+@media print { .learn-banner, .learn-note { display: none; } }

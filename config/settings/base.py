@@ -74,6 +74,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.core.context.learn",
             ],
         },
     },
@@ -99,15 +100,57 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# allauth: email is the login; verification is mandatory (wired up in Phase 2).
+# allauth: email is the login; verification is mandatory. Sign-up, by email or by
+# Google, always goes through accounts.forms.SignupForm (name, 18 and over, privacy).
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_SIGNUP_FORM_CLASS = "apps.accounts.forms.SignupForm"
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "NRSTATLAB: "
+ACCOUNT_LOGOUT_REDIRECT_URL = "/"
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+LOGIN_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "/me/"
+SOCIALACCOUNT_AUTO_SIGNUP = False
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = False
+SOCIALACCOUNT_STORE_TOKENS = False
+# Google sign-in appears only when its OAuth client is configured (BUILD-GUIDE Step 7).
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", default="")
+GOOGLE_CLIENT_SECRET = env("GOOGLE_CLIENT_SECRET", default="")
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APPS": [{"client_id": GOOGLE_CLIENT_ID, "secret": GOOGLE_CLIENT_SECRET}]
+        if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET else [],
+        "SCOPE": ["email", "profile"],
+        "AUTH_PARAMS": {"prompt": "select_account"},
+    },
+}
 
-# django-axes: lock an account/IP pair after 5 failures, for an hour.
+# Email goes through whatever EMAIL_URL names (smtp+tls://…, or consolemail:// in
+# development); the provider is chosen before staging (ARCHITECTURE.md §9.2).
+EMAIL_CONFIG = env.email_url("EMAIL_URL", default="consolemail://")
+vars().update(EMAIL_CONFIG)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="NRSTATLAB <no-reply@localhost>")
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# django-axes: lock an account/IP pair after 5 failures, for an hour. Only failed
+# attempts are recorded; successful logins are not logged (the privacy page says so).
 AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = 1
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+AXES_USERNAME_CALLABLE = "apps.accounts.lockout.username"
+AXES_DISABLE_ACCESS_LOG = True
+AXES_RESET_ON_SUCCESS = True
+# While locked out, say so (a 429 page) rather than "wrong password"; the hour is not extended.
+AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
+# While locked out, say so (a 429 page), rather than "wrong password"; the hour is not extended.
+
+# The admin needs a TOTP device when this is on (default in production).
+ADMIN_OTP_REQUIRED = env.bool("ADMIN_OTP_REQUIRED", default=False)
+OTP_TOTP_ISSUER = "NRSTATLAB"
 
 LANGUAGE_CODE = "en-gb"
 TIME_ZONE = "Asia/Kolkata"

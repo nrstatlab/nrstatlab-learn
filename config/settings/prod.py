@@ -2,6 +2,9 @@
 from .base import *  # noqa: F401,F403
 
 DEBUG = False
+ADMIN_OTP_REQUIRED = env.bool("ADMIN_OTP_REQUIRED", default=True)  # noqa: F405
+EMAIL_CONFIG = env.email_url("EMAIL_URL")  # noqa: F405  (required in production)
+vars().update(EMAIL_CONFIG)
 SECURE_SSL_REDIRECT = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_HSTS_SECONDS = 31536000

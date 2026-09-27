@@ -113,3 +113,26 @@ def stored_counts():
         "indexed pages": Unit.objects.filter(indexed=True).count() + Page.objects.filter(indexed=True).count(),
         "other pages": Unit.objects.filter(indexed=False).count() + Page.objects.filter(indexed=False).count(),
     }
+
+
+# ---------------------------------------------------------------- units, for progress
+
+def unit_by_path(legacy_path):
+    """The markable unit at this path (its page id), or None."""
+    return Unit.objects.filter(legacy_path=legacy_path).select_related("course").first()
+
+
+def units_by_path(paths):
+    """{legacy path: unit} for the markable units among these paths."""
+    return {u.legacy_path: u for u in Unit.objects.filter(legacy_path__in=list(paths)).select_related("course")}
+
+
+def units_by_course(course_ids=None):
+    """{course: [units in order]}, for every course or only these."""
+    qs = Unit.objects.select_related("course").order_by("course__order", "order")
+    if course_ids is not None:
+        qs = qs.filter(course_id__in=list(course_ids))
+    out = {}
+    for u in qs:
+        out.setdefault(u.course, []).append(u)
+    return out

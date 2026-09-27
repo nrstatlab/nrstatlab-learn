@@ -1,0 +1,58 @@
+{% extends "base_app.html" %}
+{% block head_title %}Privacy{% endblock %}
+{% block extra_head %}<meta name="description" content="What NRSTATLAB keeps if you make an account, why, and how to take it away or delete it.">{% endblock %}
+{% block content %}
+<h1>Privacy</h1>
+<p class="app-lead">Reading NRSTATLAB needs no account. An account only keeps your progress, so that
+it follows you from one device to another. This page says what is kept, why, and how to take it
+with you or delete it.</p>
+
+<h2>If you only read</h2>
+<p>Nothing about you is kept on the server. There are no adverts, no trackers and no analytics.
+Pages you mark done without an account are saved in your own browser only.</p>
+
+<h2>If you make an account, we keep</h2>
+<ul>
+  <li><b>Your email address</b>, to sign you in and to send the emails an account needs
+  (confirming the address, resetting a password, confirming a deletion). We send nothing else.</li>
+  <li><b>Your password</b>, stored only as a one-way hash, which cannot be turned back into it.
+  If you sign in with Google instead, Google tells us your email address and an account number;
+  we never see your Google password and keep no access to your Google account.</li>
+  <li><b>The name you give</b>, to greet you on your dashboard.</li>
+  <li><b>That you confirmed you are 18 or over</b>, and when you accepted this notice. Accounts are
+  for adults for now.</li>
+  <li><b>Your progress</b>: which units you marked done, and when. When unit tests arrive, your
+  answers and scores too.</li>
+</ul>
+<p>We do not ask for your phone number, your address, your college or anything else, and we never
+sell or share what we keep.</p>
+
+<h2>Cookies</h2>
+<p>Two, and only when you sign in or fill in a form: one keeps you signed in, and one protects
+forms against being submitted from another site. Neither is used for tracking.</p>
+
+<h2>Security records</h2>
+<p>To stop people guessing passwords, a failed sign-in is recorded with the email address tried,
+the internet address it came from, the browser's name and the time. After five failures, signing in
+to that email address from that internet address is paused for an hour. The records are removed after that hour, or at once when a
+sign-in succeeds. Successful sign-ins are not logged.</p>
+
+<h2>Who else handles it</h2>
+<p>The application runs with a hosting company, which stores the database, and sends email through
+an email delivery service, which sees the address and the message it delivers. Both act only on our
+instructions. They will be named here before accounts open to the public.</p>
+
+<h2>Take it with you, or delete it</h2>
+<ul>
+  <li><b>Download</b>: <a href="/me/export">Download my data</a> gives you everything above, as a
+  JSON file.</li>
+  <li><b>Delete</b>: <a href="/me/delete">Delete my account</a> removes your account, your profile
+  and your progress at once. You get one email confirming it. Test attempts, when there are any,
+  stay in the question statistics with nothing linking them to you.</li>
+</ul>
+
+<h2>Questions</h2>
+<p>Ask on the site's <a href="https://github.com/nrstatlab/planning-for-future/issues">GitHub Issues</a>
+page. Please do not post your email address or anything else personal there.</p>
+<p class="app-quiet">Last changed 27 September 2026.</p>
+{% endblock %}

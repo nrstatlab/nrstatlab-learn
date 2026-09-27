@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block head_title %}{% endblock head_title %} · NRSTATLAB</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/assets/site-base.css">
+<link rel="stylesheet" href="/assets/site-dark.css">
+<link rel="stylesheet" href="/assets/site-nav.css">
+{% load static %}<link rel="stylesheet" href="{% static 'learn/app.css' %}">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon.ico" sizes="any">
+{{ learn_head }}
+{% block extra_head %}{% endblock extra_head %}
+</head>
+<body class="app-page">
+<a class="app-skip" href="#main">Skip to content</a>
+{{ learn_nav }}
+<main class="app" id="main" tabindex="-1">
+{% if messages %}
+<ul class="app-messages" role="status">
+{% for message in messages %}<li class="app-message app-message-{{ message.tags }}">{{ message }}</li>{% endfor %}
+</ul>
+{% endif %}
+{% block body %}{% block content %}{% endblock content %}{% endblock body %}
+</main>
+<p class="app-foot-note"><a href="/privacy.html">Privacy</a> · Questions and corrections: <a href="https://github.com/nrstatlab/planning-for-future/issues">GitHub Issues</a></p>
+{{ learn_foot }}
+{% block extra_body %}{% endblock extra_body %}
+</body>
+</html>

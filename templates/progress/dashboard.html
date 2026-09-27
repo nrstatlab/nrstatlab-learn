@@ -1,0 +1,54 @@
+{% extends "base_app.html" %}
+{% block head_title %}My progress{% endblock %}
+{% block content %}
+<h1>Hello, {{ display_name }}</h1>
+
+{% if last %}
+<section class="app-card app-continue" aria-labelledby="continue-h">
+  <h2 id="continue-h">Continue where you left off</h2>
+  {% if next %}
+  <p>Next: <a href="/{{ next.path }}">{{ next.title }}</a></p>
+  <p class="app-quiet">Last marked done: <a href="/{{ last.path }}">{{ last.title }}</a></p>
+  {% else %}
+  <p>Last marked done: <a href="/{{ last.path }}">{{ last.title }}</a></p>
+  {% endif %}
+  {% if streak %}<p class="app-streak">{{ streak }} day{{ streak|pluralize }} in a row with a unit done.</p>{% endif %}
+</section>
+{% endif %}
+
+<section aria-labelledby="courses-h">
+  <h2 id="courses-h">Your courses</h2>
+  {% if courses %}
+  <ul class="app-courses">
+    {% for c in courses %}
+    <li class="app-card">
+      <a class="app-course-title" href="/{{ c.path }}">{{ c.title }}</a>
+      <div class="app-bar" role="img" aria-label="{{ c.studied }} of {{ c.total }} units done">
+        <span style="width: {{ c.percent }}%"></span>
+      </div>
+      <p class="app-quiet">{{ c.studied }} of {{ c.total }} units done{% if c.passed %} · {{ c.passed }} passed{% endif %}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>Nothing marked done yet. Open any unit and press <b>Mark this unit done</b> when you finish it;
+  it is saved to your account and shows on every device you sign in on.
+  <a href="/index.html">Choose a course</a>.</p>
+  {% endif %}
+</section>
+
+<section class="app-account" aria-labelledby="account-h">
+  <h2 id="account-h">Your account</h2>
+  <ul class="app-links">
+    <li><a href="{% url 'account_email' %}">Email address</a></li>
+    <li><a href="{% url 'account_change_password' %}">Password</a></li>
+    <li><a href="{% url 'account_export' %}">Download my data (JSON)</a></li>
+    <li><a href="/privacy.html">Privacy</a></li>
+    <li><a href="{% url 'account_delete' %}">Delete my account</a></li>
+  </ul>
+  <form method="post" action="{% url 'account_logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="app-secondary">Sign out</button>
+  </form>
+</section>
+{% endblock %}

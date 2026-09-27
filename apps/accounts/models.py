@@ -44,6 +44,8 @@ class Profile(models.Model):
     # until a consent flow has been through legal review.
     age_confirmed = models.BooleanField(default=False)
     guardian_consent = models.BooleanField(default=False)
+    # Set once the learner has brought over, or declined, the progress saved in a browser.
+    browser_import_done = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

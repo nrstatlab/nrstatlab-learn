@@ -1,0 +1,19 @@
+{% extends "base_app.html" %}
+{% block head_title %}Delete your account{% endblock %}
+{% block content %}
+<h1>Delete your account</h1>
+<p>This deletes your account and everything kept with it: your progress, your profile and your
+sign-in details. It cannot be undone. If you want a copy first,
+<a href="{% url 'account_export' %}">download your data</a>.</p>
+<p>Test attempts you made stay in the question statistics with no link to you, so they can no
+longer be traced back to anyone.</p>
+<form method="post" class="app-form">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for field in form %}
+  <p>{{ field.errors }}<label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}</p>
+  {% endfor %}
+  <p><button type="submit" class="app-danger">Delete my account</button>
+  <a class="app-cancel" href="{% url 'dashboard' %}">Keep it</a></p>
+</form>
+{% endblock %}

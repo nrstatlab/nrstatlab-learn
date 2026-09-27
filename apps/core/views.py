@@ -1,8 +1,10 @@
 from django.db import connection
 from django.http import HttpResponse, HttpResponseNotFound, HttpResponsePermanentRedirect, JsonResponse
+from django.shortcuts import render
 
 from apps.study import services as study
 
+from .inject import inject
 from .models import Redirect
 
 HTML = "text/html; charset=utf-8"
@@ -31,13 +33,17 @@ def page(request, path=""):
     found = study.find(legacy)
     if found is None:
         return not_found(request)
-    return HttpResponse(study.render_html(found), content_type=HTML)
+    return HttpResponse(inject(study.render_html(found), request), content_type=HTML)
 
 
 def not_found(request, exception=None):
     stored = study.find("404.html")
-    body = study.render_html(stored) if stored else "<h1>Page not found</h1>"
+    body = inject(study.render_html(stored), request) if stored else "<h1>Page not found</h1>"
     return HttpResponseNotFound(body, content_type=HTML)
+
+
+def privacy(request):
+    return render(request, "core/privacy.html")
 
 
 def health(request):
