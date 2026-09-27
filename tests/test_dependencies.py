@@ -9,14 +9,16 @@ from pathlib import Path
 
 APPS_DIR = Path(__file__).resolve().parent.parent / "apps"
 ALLOWED = {
-    "core": {"study", "examinations", "papers"},
+    "core": {"study", "examinations", "papers", "progress", "accounts"},
     "accounts": set(),
-    "study": set(),
-    "examinations": {"study", "progress"},
-    "papers": {"assessments", "examinations"},
-    "assessments": {"study", "progress"},
-    "progress": {"study"},
+    "study": {"accounts"},
+    "examinations": {"study", "progress", "accounts"},
+    "papers": {"assessments", "examinations", "accounts"},
+    "assessments": {"study", "progress", "accounts"},
+    "progress": {"study", "accounts"},
 }
+# Every app may use accounts.services (the export registry and the profile flags);
+# accounts itself uses no other app, so this adds no cycle.
 FK_STRING = re.compile(r"""["'](core|accounts|study|examinations|papers|assessments|progress)\.[A-Z]\w+["']""")
 
 

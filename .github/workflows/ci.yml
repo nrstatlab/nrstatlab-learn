@@ -31,15 +31,18 @@ jobs:
           cache: pip
       - name: Install
         run: pip install -r requirements-dev.txt
+      - name: Install Chromium for the browser tests
+        run: python -m playwright install --with-deps chromium
       - name: Lint
         run: ruff check .
       - name: Django checks
         run: |
           python manage.py check
-          DJANGO_SETTINGS_MODULE=config.settings.prod python manage.py check --deploy
+          DJANGO_SETTINGS_MODULE=config.settings.prod EMAIL_URL=smtp+tls://ci:ci-only@localhost:587 \
+            python manage.py check --deploy
       - name: No missing migrations
         run: python manage.py makemigrations --check --dry-run
       - name: The content imports cleanly (dry run)
         run: python manage.py import_site --dry-run
-      - name: Tests (every page, every redirect, every site file, boundaries)
+      - name: Tests (every page for guests and learners, redirects, site files, boundaries, accounts, progress, browser)
         run: pytest --cov --cov-report=term-missing:skip-covered

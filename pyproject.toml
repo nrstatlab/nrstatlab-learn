@@ -3,6 +3,7 @@ DJANGO_SETTINGS_MODULE = "config.settings.test"
 python_files = ["test_*.py"]
 testpaths = ["tests"]
 addopts = "-q"
+markers = ["browser: drives Chromium against a live server (run last; they flush the database)"]
 
 [tool.ruff]
 line-length = 130
