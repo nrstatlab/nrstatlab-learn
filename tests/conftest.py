@@ -14,9 +14,11 @@ def pytest_collection_modifyitems(items):
 
 @pytest.fixture(scope="session")
 def django_db_setup(django_db_setup, django_db_blocker):
-    """Import the whole site once into the test database; every test sees it."""
+    """Import the whole site and its question bank once into the test database;
+    every test sees them."""
     with django_db_blocker.unblock():
         call_command("import_site", verbosity=0)
+        call_command("import_questions", verbosity=0)
 
 
 @pytest.fixture(scope="session")
@@ -53,3 +55,9 @@ def course_units():
     from apps.study.models import Course
     course = Course.objects.get(path="statistics/sampling-theory")
     return list(course.units.order_by("order"))
+
+
+@pytest.fixture(scope="session")
+def bank():
+    from apps.core.questions import read_bank
+    return read_bank(settings.CONTENT_DIR)

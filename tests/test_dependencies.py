@@ -9,7 +9,7 @@ from pathlib import Path
 
 APPS_DIR = Path(__file__).resolve().parent.parent / "apps"
 ALLOWED = {
-    "core": {"study", "examinations", "papers", "progress", "accounts"},
+    "core": {"study", "examinations", "papers", "progress", "accounts", "assessments"},
     "accounts": set(),
     "study": {"accounts"},
     "examinations": {"study", "progress", "accounts"},

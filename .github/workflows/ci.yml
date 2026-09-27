@@ -42,7 +42,9 @@ jobs:
             python manage.py check --deploy
       - name: No missing migrations
         run: python manage.py makemigrations --check --dry-run
-      - name: The content imports cleanly (dry run)
-        run: python manage.py import_site --dry-run
-      - name: Tests (every page for guests and learners, redirects, site files, boundaries, accounts, progress, browser)
+      - name: The content and its question bank import cleanly (dry run)
+        run: |
+          python manage.py import_site --dry-run
+          python manage.py import_questions --dry-run
+      - name: Tests (pages, redirects, site files, boundaries, accounts, progress, question bank, unit tests, browser)
         run: pytest --cov --cov-report=term-missing:skip-covered

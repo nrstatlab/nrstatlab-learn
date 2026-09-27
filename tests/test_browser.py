@@ -29,6 +29,7 @@ def site(live_server):
     database emptied, so the site is imported again for each."""
     if not Unit.objects.exists():
         call_command("import_site", verbosity=0)
+        call_command("import_questions", verbosity=0)
     return live_server.url
 
 
@@ -164,3 +165,58 @@ def test_the_account_state_block_is_valid_json_on_every_kind_of_page(page, site,
         page.goto(f"{site}/{path}")
         state = json.loads(page.locator("#nrstat-account").text_content())
         assert state["signed_in"] is True, path
+
+
+UGC7 = "exams/ugc-net/unit7.html"
+
+
+def test_a_guest_is_told_about_the_test_even_with_storage_blocked(browser, site):
+    ctx = browser.new_context()
+    ctx.add_init_script("Object.defineProperty(window, 'localStorage', {get() { throw new Error('blocked'); }});")
+    page = ctx.new_page()
+    page.goto(f"{site}/{UGC7}")
+    box = page.locator(".learn-test")
+    assert "10 questions, pass at 70%" in box.inner_text() and "Sign in" in box.inner_text()
+    assert page.locator(TOGGLE).count() == 0
+    ctx.close()
+
+
+def test_a_learner_takes_a_unit_test_from_the_unit_page(page, site, learner):
+    from apps.assessments.models import Attempt
+
+    from .test_unit_tests import correct_answers
+
+    sign_in(page, site, learner.email, UGC7)
+    box = page.locator(".learn-test")
+    assert "It opens when you mark this unit done" in box.inner_text()
+    mark(page)
+    box.get_by_role("link", name="Take the test").click()
+    page.get_by_role("button", name="Start the test").click()
+    page.wait_for_url(f"{site}/test/attempt/**")
+    attempt = Attempt.objects.get(user=learner)
+    assert page.locator("fieldset.tq").count() == 10
+    for n, token in correct_answers(attempt).items():
+        with page.expect_response(lambda r: r.url.endswith("/answer")) as resp:
+            page.locator(f'fieldset.tq[data-n="{n}"] input[value="{token}"]').check()
+        assert resp.value.ok
+    assert attempt.responses.count() == 10
+    page.get_by_role("button", name="Submit the test").click()
+    page.wait_for_url(f"{site}/test/attempt/{attempt.pk}/result")
+    assert "10 of 10" in page.locator(".tr-summary").inner_text()
+    page.goto(f"{site}/{UGC7}")
+    assert "Passed, best 100%" in page.locator(".learn-test").inner_text()
+    assert page.locator(TOGGLE).first.inner_text() == "Done ✓ (undo)"
+
+
+def test_unanswered_questions_are_confirmed_before_submitting(page, site, learner):
+    from apps.progress import services as progress
+    progress.mark_studied(learner, UGC7)
+    sign_in(page, site, learner.email, UGC7)
+    page.locator(".learn-test a").click()
+    page.get_by_role("button", name="Start the test").click()
+    page.wait_for_url(f"{site}/test/attempt/**")
+    messages = []
+    page.on("dialog", lambda d: (messages.append(d.message), d.dismiss()))
+    page.get_by_role("button", name="Submit the test").click()
+    assert messages == ["10 questions are not answered. Submit anyway?"]
+    assert "/result" not in page.url
