@@ -11,6 +11,7 @@
 | Export and delete work in an end-to-end test | **Met.** Export holds only the learner's own data; deletion removes the user, profile, progress, events and email addresses, anonymises attempts and sends one email |
 | Progress marked on one browser shows on another | **Met, in Chromium.** A unit marked on one device shows as done on a second, and an undo there reaches the account |
 | An import of mixed valid and invalid ids reports both correctly | **Met.** `{"imported": n, "already": n, "ignored": [...]}`, tested with valid, invalid, duplicate and oversized lists |
+| CI | **Green on GitHub.** Run #4 on `9ec14d6` passed every step, including the Chromium install and the browser tests: 80 passed, 96% coverage |
 
 ## What was built
 
