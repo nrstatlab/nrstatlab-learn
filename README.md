@@ -25,6 +25,16 @@ python manage.py runserver
 ## Test
 
 ```bash
-pytest                                    # unit tests, every legacy path, dependency rules
+pytest                                    # unit tests, every legacy path, dependency rules, browser
 ruff check .
+pytest -m "not browser"                   # the same, without Chromium
 ```
+
+Browser tests drive Chromium through pytest-playwright (`python -m playwright install chromium`
+once). They run last, because a live server empties the test database after each one.
+
+## Status
+
+- **Phase 1, foundations:** every page of the site served at its old address. `docs/PHASE-1-REPORT.md`.
+- **Phase 2, accounts and progress:** sign-up, progress kept on the account and shown by the site's
+  own progress script, the dashboard, export and deletion. `docs/PHASE-2-REPORT.md`.
