@@ -7,9 +7,9 @@
 - **All 675 indexed paths return 200 with the same content: met, and exceeded.** Each page is
   byte-identical to the original file, not just the same text.
 - **Every old address returns 301: met.** All 946, each to a page that returns 200.
-- **CI: written** (`.github/workflows/ci.yml`). It runs ruff, `check`, `check --deploy`, the
-  migrations check, the import dry run and pytest. It has not run on GitHub yet, because the
-  repository could not be created from this session.
+- **CI: green on GitHub.** Run #1 on `2da40ea` passed every step: submodule checkout, ruff, `check`,
+  `check --deploy`, the migrations check and the import dry run. pytest reported 20 passed, with
+  94% coverage.
 
 ## What was built
 
@@ -94,8 +94,12 @@ Black is installed, and the target held the content submodule.
 
 ## Open
 
-- **The GitHub repository does not exist yet.** Creating it was refused (403: the session's
-  GitHub connection cannot create repositories). All work is committed locally and pushes as soon
-  as the owner creates an empty private `nrstatlab/nrstatlab-learn` and gives Claude access.
+- **The repository.** The owner created
+  [`nrstatlab/nrstatlab-learn`](https://github.com/nrstatlab/nrstatlab-learn), because this session
+  could not. It is **public**, by the owner's choice; the plan had said private.
+  - Before the first push, every tracked file and the whole commit history were scanned: no
+    secrets, no tracked `.env`, no email address except the `noreply` commit trailer, and no
+    university name.
+  - From here on, no secret may ever be committed.
 - **`sitemap.xml` and `robots.txt`** are still served as the content repository's files, for the
   current origin. Generating them for the new domain is Phase 7 work.
