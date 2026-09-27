@@ -19,6 +19,7 @@ cp .env.example .env                      # then edit SECRET_KEY
 docker compose up -d db                   # or a local PostgreSQL 16
 python manage.py migrate
 python manage.py import_site              # loads the site from content/
+python manage.py import_questions         # then its question bank and solved papers
 python manage.py runserver
 ```
 
@@ -38,3 +39,5 @@ once). They run last, because a live server empties the test database after each
 - **Phase 1, foundations:** every page of the site served at its old address. `docs/PHASE-1-REPORT.md`.
 - **Phase 2, accounts and progress:** sign-up, progress kept on the account and shown by the site's
   own progress script, the dashboard, export and deletion. `docs/PHASE-2-REPORT.md`.
+- **Phase 3, unit tests:** the question bank (950 questions, the doubtful keys never scored) and a
+  ten-question test on each unit that has enough checked questions. `docs/PHASE-3-REPORT.md`.
