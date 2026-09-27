@@ -1,4 +1,9 @@
-# Development only. Production runs on a managed platform (ARCHITECTURE.md, decision 2).
+# Development and offline checking only (docs/LOCAL-CHECK.md). Production runs on a
+# managed platform (ARCHITECTURE.md, decision 2), and nothing is put online until the
+# owner has signed off the whole checklist.
+#
+#   docker compose up --build   then open http://localhost:8000
+#   docker compose down -v      to start again from nothing
 services:
   db:
     image: postgres:16
@@ -6,7 +11,6 @@ services:
       POSTGRES_DB: nrstatlab
       POSTGRES_USER: nrstatlab
       POSTGRES_PASSWORD: dev-only
-    ports: ["5432:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nrstatlab"]
@@ -14,9 +18,15 @@ services:
       retries: 10
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
-    env_file: .env
+    # Database, content, question bank and the three demo accounts, then the server.
+    command: sh -c "python manage.py setup_local && python manage.py runserver 0.0.0.0:8000"
+    env_file:
+      - path: .env
+        required: false
     environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      SECRET_KEY: local-check-only-not-a-secret
+      ALLOWED_HOSTS: localhost,127.0.0.1
       DATABASE_URL: postgres://nrstatlab:dev-only@db:5432/nrstatlab
     volumes: [".:/app"]
     ports: ["8000:8000"]

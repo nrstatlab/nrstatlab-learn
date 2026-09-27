@@ -8,18 +8,30 @@ they are for their exam.
   `ARCHITECTURE.md` and `PROMPT.md`.
 - **The content:** `content/` is the static site, added as a git submodule. Content is written
   there, never here.
+- **Offline until sign-off.** Nothing of the app is online: no hosting, no staging, no domain.
+  It is built and checked on a computer until the owner has signed off every check in
+  [`docs/LOCAL-CHECK.md`](docs/LOCAL-CHECK.md).
 
-## Run it locally
+## Try it on your computer
 
 ```bash
-git clone --recurse-submodules <this repo> && cd nrstatlab-learn
+git clone --recurse-submodules https://github.com/nrstatlab/nrstatlab-learn.git && cd nrstatlab-learn
+docker compose up --build                 # then open http://localhost:8000
+```
+
+That builds the app and prepares everything: the database, the site, the question bank and three
+demo accounts. [`docs/LOCAL-CHECK.md`](docs/LOCAL-CHECK.md) lists the accounts and every check to
+try.
+
+## Develop
+
+With Python 3.12 and a local PostgreSQL 16:
+
+```bash
 python3.12 -m venv .venv && . .venv/bin/activate
 pip install -r requirements-dev.txt
-cp .env.example .env                      # then edit SECRET_KEY
-docker compose up -d db                   # or a local PostgreSQL 16
-python manage.py migrate
-python manage.py import_site              # loads the site from content/
-python manage.py import_questions         # then its question bank and solved papers
+cp .env.example .env                      # then edit SECRET_KEY and DATABASE_URL
+python manage.py setup_local              # migrate, import_site, import_questions, demo accounts
 python manage.py runserver
 ```
 

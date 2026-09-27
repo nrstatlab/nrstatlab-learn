@@ -4,3 +4,5 @@ DEBUG = True
 ALLOWED_HOSTS = ALLOWED_HOSTS or ["localhost", "127.0.0.1"]  # noqa: F405
 STATIC_ROOT = None
 WHITENOISE_USE_FINDERS = True
+# The development server speaks plain http, so the links in its emails must too.
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"

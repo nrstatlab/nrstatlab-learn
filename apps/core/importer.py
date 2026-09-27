@@ -61,6 +61,35 @@ def _load(path: Path, name: str):
         sys.dont_write_bytecode = before
 
 
+# What the content repository's .gitignore leaves out, for when git is not there.
+UNTRACKED_DIRS = {".git", "_site", ".jekyll-cache", "__pycache__", "node_modules"}
+UNTRACKED_NAMES = {".DS_Store", "Thumbs.db"}
+
+
+def site_files(root: Path):
+    """The content repository's files: git's own list; or, where there is no git (a
+    Docker build copies the files without it), every file except what the content
+    repository's .gitignore excludes. tests/test_importer.py holds the two to be equal."""
+    try:
+        out = subprocess.run(["git", "ls-files", "-z"], cwd=root, capture_output=True, text=True, check=True).stdout
+        return sorted(f for f in out.split("\0") if f)
+    except (OSError, subprocess.CalledProcessError):
+        return walk_files(root)
+
+
+def walk_files(root: Path):
+    root = Path(root)
+    out = []
+    for path in root.rglob("*"):
+        rel = path.relative_to(root)
+        if any(part in UNTRACKED_DIRS for part in rel.parts[:-1]) or not path.is_file():
+            continue
+        if rel.name in UNTRACKED_NAMES or rel.suffix in (".pyc", ".pyo", ".pyd") or rel.parts[0] in UNTRACKED_DIRS:
+            continue
+        out.append(rel.as_posix())
+    return sorted(out)
+
+
 @dataclass
 class Source:
     """Everything read from content/, before anything is written."""
@@ -86,9 +115,7 @@ class Source:
         nav = _load(tools / "site_nav_model.py", "_content_nav")
         src = cls(root=root)
 
-        tracked = subprocess.run(["git", "ls-files", "-z"], cwd=root, capture_output=True,
-                                 text=True, check=True).stdout.split("\0")
-        tracked = [f for f in tracked if f and not f.startswith(NOT_SITE) and not Path(f).name.startswith(".git")]
+        tracked = [f for f in site_files(root) if f and not f.startswith(NOT_SITE) and not Path(f).name.startswith(".git")]
         for rel in tracked:
             path = root / rel
             if not path.is_file():

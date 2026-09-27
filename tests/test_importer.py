@@ -73,3 +73,9 @@ def test_the_content_submodule_is_left_exactly_as_checked_out(source):
     status = subprocess.run(["git", "status", "--porcelain"], cwd=source.root,
                             capture_output=True, text=True, check=True).stdout
     assert status == "", f"the content submodule was modified:\n{status[:500]}"
+
+
+def test_without_git_the_same_files_are_found(settings):
+    """A Docker build copies content/ without git; walking the folder must find what git lists."""
+    from apps.core.importer import site_files, walk_files
+    assert walk_files(settings.CONTENT_DIR) == site_files(settings.CONTENT_DIR)
