@@ -70,7 +70,7 @@ def test_import_brings_over_units_as_studied_and_ignores_the_rest(learner, cours
     result = services.import_browser(learner, ids)
     assert result == {"imported": 2, "already": 0, "ignored": ["index.html", "made/up.html"]}
     assert all(status(learner, u) == "studied" for u in course_units[:2])
-    assert UnitProgress.objects.filter(user=learner, source="browser").count() == 2
+    assert UnitProgress.objects.filter(user=learner, source="browser_import").count() == 2
     assert not accounts.import_offer_open(learner)
 
 

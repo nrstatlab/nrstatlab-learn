@@ -99,7 +99,7 @@ def import_browser(user, ids):
             already += 1
             continue
         row = row or UP(user=user, unit=unit)
-        row.status, row.studied_at, row.source = UP.STUDIED, now, "browser"
+        row.status, row.studied_at, row.source = UP.STUDIED, now, "browser_import"
         row.save()
         imported += 1
     ignored = sorted(i for i in ids if i not in units)
