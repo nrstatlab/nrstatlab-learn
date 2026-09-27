@@ -37,6 +37,19 @@
 .learn-banner button[disabled] { opacity: .6; cursor: default; }
 @media (max-width: 1180px) { .learn-banner { margin-left: 16px; margin-right: 16px; } }
 
+.learn-test {
+  margin: 12px 0 0; padding: 12px 16px; border: 1px solid #b9d3ea; border-radius: 10px;
+  background: #eef5fb; color: #16233a; font: 15px/1.5 "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+.learn-test p { margin: 0; max-width: none; }
+.learn-test p + p { margin-top: 6px; }
+.learn-test a { font-weight: 600; }   /* the site's own link colour */
+.learn-test a.learn-test-go {
+  display: inline-block; text-decoration: none; background: #1565a8; color: #fff; padding: 6px 14px;
+  border-radius: 999px; margin-right: 6px;
+}
+.learn-test a.learn-test-go:focus-visible { outline: 3px solid #17659f; outline-offset: 2px; }
+
 .learn-note { display: inline-block; margin-left: 10px; font-size: .9rem; color: #9a3412; }
 .learn-banner .learn-note { margin-left: 0; flex-basis: 100%; }
 
@@ -45,5 +58,7 @@
   .learn-banner .learn-yes { background: #a8cfed; border-color: #a8cfed; color: #10233a; }
   .learn-banner .learn-no { background: #18222a; border-color: #a8cfed; color: #a8cfed; }
   .learn-note { color: #fdba74; }
+  .learn-test { background: #1c283b; border-color: #2a3d5b; color: #c9d5ea; }
+  .learn-test a.learn-test-go { background: #a8cfed; color: #10233a; }
 }
-@media print { .learn-banner, .learn-note { display: none; } }
+@media print { .learn-banner, .learn-note, .learn-test { display: none; } }

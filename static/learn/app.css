@@ -53,6 +53,48 @@ main.app button.app-danger { background: #b42318; border-color: #b42318; }
 .app-cancel { margin-left: 12px; }
 .app-account form { margin-top: 12px; }
 
+/* Unit tests. */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.app-facts { padding-left: 1.2em; }
+.app-facts li { margin: 6px 0; }
+.tq { background: var(--nl-card); border: 1px solid var(--nl-line); border-radius: 12px; padding: 14px 18px;
+  margin: 0 0 16px; min-width: 0; }
+fieldset.tq legend { font-weight: 700; color: var(--nl-blue); padding: 0 6px; margin-left: -6px; }
+.tq-stem { line-height: 1.6; overflow-wrap: anywhere; }
+.tq-stem p { margin: .3rem 0 .5rem; }
+.tq-stem table, .tq-match { border-collapse: collapse; margin: 8px 0; }
+.tq-stem td, .tq-stem th, .tq-match td, .tq-match th { border: 1px solid var(--nl-line); padding: 4px 8px; vertical-align: top; }
+.tq-stem .scroll, main.app .scroll { overflow-x: auto; max-width: 100%; }
+.tq-options { list-style: none; padding: 0; margin: 10px 0 0; }
+.tq-options li { margin: 6px 0; }
+main.app .tq-options label { display: flex; gap: 10px; align-items: baseline; font-weight: 400; margin: 0; padding: 8px 10px;
+  border: 1px solid var(--nl-line); border-radius: 10px; cursor: pointer; }
+main.app .tq-options label:hover { border-color: #1565a8; }
+main.app .tq-options input { flex: none; margin: 0; transform: translateY(2px); width: 18px; height: 18px; }
+.tq-options input:focus-visible { outline: 3px solid #17659f; outline-offset: 2px; }
+.tq-letter { font-weight: 700; flex: none; min-width: 1.2em; }
+.tq-text { min-width: 0; overflow-wrap: anywhere; }
+.tq-right { margin: 8px 0; }
+main.app select { font: inherit; padding: 6px 8px; border: 1px solid #b9cadb; border-radius: 8px; background: #fff; color: #10233a; }
+main.app input[inputmode=decimal] { width: 100%; max-width: 220px; box-sizing: border-box; font: inherit; padding: 8px 10px;
+  border: 1px solid #b9cadb; border-radius: 8px; background: #fff; color: #10233a; }
+.tq-status { margin: 8px 0 0; min-height: 1.2em; font-size: .9rem; color: var(--nl-ink-soft); }
+.tq-submit { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
+.tr-summary.is-pass { border-color: #047857; }
+.tr-summary.is-fail { border-color: #b45309; }
+.tr-score { font-size: 1.3rem; margin: 0 0 6px; }
+main.app .tr-head { font-size: 1.05rem; margin: 0 0 8px; }
+.tr-q.is-right .tr-head { color: #047857; }
+.tr-q.is-wrong .tr-head { color: #b42318; }
+.tr-options li { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; padding: 8px 10px;
+  border: 1px solid var(--nl-line); border-radius: 10px; }
+.tr-options li.is-key { border-color: #047857; background: #ecfdf5; }
+.tr-options li.is-chosen:not(.is-key) { border-color: #b42318; background: #fef2f2; }
+.tr-tag { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #047857; }
+.tr-tag.tr-yours { color: #1565a8; }
+.tr-working { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--nl-line); line-height: 1.6; overflow-wrap: anywhere; }
+.app-tests td, .app-tests th { padding: 4px 10px 4px 0; text-align: left; vertical-align: top; }
+
 .app-foot-note { max-width: 760px; margin: 0 auto 10px; padding: 0 16px; box-sizing: border-box;
   font-size: .92rem; color: var(--nl-ink-soft); }
 
@@ -71,4 +113,16 @@ main.app button.app-danger { background: #b42318; border-color: #b42318; }
   main.app button { background: #a8cfed; border-color: #a8cfed; color: #10233a; }
   main.app button.app-secondary { background: #18222a; color: #a8cfed; }
   main.app button.app-danger { background: #f87171; border-color: #f87171; color: #10233a; }
+  .tq { background: #18222a; border-color: #2a3d5b; }
+  fieldset.tq legend { color: #b1d2ef; }
+  main.app .tq-options label, .tr-options li { border-color: #2a3d5b; }
+  main.app .tq-options label:hover { border-color: #a8cfed; }
+  main.app select, main.app input[inputmode=decimal] { background: #172133; color: #c9d5ea; border-color: #3a5170; }
+  .tq-status { color: #bbc3cf; }
+  .tr-q.is-right .tr-head, .tr-tag { color: #6ee7b7; }
+  .tr-q.is-wrong .tr-head { color: #fca5a5; }
+  .tr-tag.tr-yours { color: #a8cfed; }
+  .tr-options li.is-key { border-color: #34d399; background: #10271f; }
+  .tr-options li.is-chosen:not(.is-key) { border-color: #f87171; background: #2c1719; }
+  .tq-stem td, .tq-stem th, .tq-match td, .tq-match th, .tr-working { border-color: #2a3d5b; }
 }

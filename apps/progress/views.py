@@ -70,4 +70,5 @@ def dashboard(request):
         "next": nxt,
         "courses": services.course_summaries(user),
         "streak": services.streak(user),
+        "tests": services.recent_tests(user),
     })

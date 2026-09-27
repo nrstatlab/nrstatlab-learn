@@ -1,0 +1,49 @@
+{% extends "base_app.html" %}
+{% load static %}
+{% block head_title %}Unit test{% endblock %}
+{% block extra_head %}{% include "includes/mathjax.html" %}{% endblock %}
+{% block content %}
+<p class="app-quiet"><a href="/{{ unit.legacy_path }}">Back to the unit</a> (your answers are kept)</p>
+<h1>Unit test</h1>
+<p class="app-lead">{{ unit.title }}</p>
+<p>{{ questions|length }} questions. Pass at {{ ut.pass_mark }}%. No time limit; each answer is saved as you choose it.</p>
+<form method="post" action="{% url 'test_submit' attempt.pk %}" id="test-form" class="test-form"
+      data-answer-url="{% url 'test_answer' attempt.pk %}">
+  {% csrf_token %}<input type="hidden" name="from_form" value="1">
+  {% for q in questions %}
+  <fieldset class="tq" data-n="{{ q.n }}" data-qtype="{{ q.qtype }}">
+    <legend>Question {{ q.n }} of {{ questions|length }}</legend>
+    <div class="tq-stem">{{ q.stem_html|safe }}</div>
+    {% if q.qtype == "numeric" %}
+    <p><label for="q{{ q.n }}">Your answer</label>
+      <input id="q{{ q.n }}" type="text" inputmode="decimal" autocomplete="off" name="q{{ q.n }}" value="{{ q.value }}"></p>
+    {% elif q.qtype == "match" %}
+    <ol class="tq-right" type="I">{% for r in q.right %}<li>{{ r.text_html|safe }}</li>{% endfor %}</ol>
+    <div class="scroll"><table class="tq-match">
+      {% for row in q.left %}
+      <tr><td>{{ row.label }}. {{ row.text_html|safe }}</td>
+        <td><label class="sr-only" for="q{{ q.n }}-{{ row.label }}">Matches</label>
+          <select id="q{{ q.n }}-{{ row.label }}" name="q{{ q.n }}-{{ row.label }}">
+            <option value="">Choose</option>
+            {% for r in q.right %}<option value="{{ r.token }}"{% if r.token == row.chosen %} selected{% endif %}>{{ r.display }}</option>{% endfor %}
+          </select></td></tr>
+      {% endfor %}
+    </table></div>
+    {% else %}
+    {% if q.qtype == "multiple" %}<p class="app-quiet">Choose every option that is right.</p>{% endif %}
+    <ul class="tq-options">
+      {% for o in q.options %}
+      <li><label><input type="{% if q.qtype == 'multiple' %}checkbox{% else %}radio{% endif %}" name="q{{ q.n }}"
+             value="{{ o.token }}"{% if o.chosen %} checked{% endif %}>
+        <span class="tq-letter">{{ o.display }}</span> <span class="tq-text">{{ o.text_html|safe }}</span></label></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <p class="tq-status" role="status" aria-live="polite"></p>
+  </fieldset>
+  {% endfor %}
+  <p class="tq-submit"><button type="submit">Submit the test</button>
+    <span class="app-quiet">Answers cannot be changed after submitting.</span></p>
+</form>
+<script src="{% static 'learn/test.js' %}"></script>
+{% endblock %}

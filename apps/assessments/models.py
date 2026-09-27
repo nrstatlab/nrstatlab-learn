@@ -30,6 +30,10 @@ class Question(models.Model):
     reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
     reviewed_at = models.DateTimeField(null=True, blank=True)
     recompute_log = models.TextField(blank=True)
+    # A hash of what the source says (stem, choices, key, solution). An import changes
+    # the status only when this changes, so a review decision made in the admin stands
+    # until the question itself is edited in the source.
+    source_hash = models.CharField(max_length=64, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -38,7 +42,13 @@ class Question(models.Model):
 
 
 class Choice(models.Model):
+    """An option. For a match question the rows are the two lists: side "left" (the
+    items, labelled A, B, …) and side "right" (what they match, labelled I, II, …);
+    the key is then Question.answer_text, a JSON object {"A": "II", …}."""
+
+    LEFT, RIGHT = "left", "right"
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="choices")
+    side = models.CharField(max_length=5, blank=True, choices=[("", "option"), (LEFT, "left"), (RIGHT, "right")])
     label = models.CharField(max_length=4)
     text_html = models.TextField()
     is_correct = models.BooleanField(default=False)  # server-only, like Question.answer_text
@@ -89,7 +99,10 @@ class Attempt(models.Model):
                 condition=(models.Q(kind="unit_test", unit_test__isnull=False)
                            | models.Q(kind="paper", unit_test__isnull=True)),
                 name="attempt_kind_matches_target",
-            )
+            ),
+            # One open attempt per learner per unit test (BUILD-GUIDE Step 10).
+            models.UniqueConstraint(fields=["user", "unit_test"], condition=models.Q(submitted_at__isnull=True),
+                                    name="one_open_attempt_per_test"),
         ]
 
 

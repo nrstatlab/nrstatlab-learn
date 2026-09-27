@@ -1,0 +1,42 @@
+{% extends "base_app.html" %}
+{% block head_title %}Test result{% endblock %}
+{% block extra_head %}{% include "includes/mathjax.html" %}{% endblock %}
+{% block content %}
+<p class="app-quiet"><a href="/{{ unit.legacy_path }}">Back to the unit</a></p>
+<h1>Test result</h1>
+<p class="app-lead">{{ r.unit_title }}</p>
+<div class="app-card tr-summary {% if r.passed %}is-pass{% else %}is-fail{% endif %}">
+  <p class="tr-score"><b>{{ r.score|floatformat:0 }} of {{ r.max_score|floatformat:0 }}</b> ({{ r.percent|floatformat:0 }}%)</p>
+  <p>{% if r.passed %}A pass: the unit is marked as passed.{% else %}Not a pass this time; the pass mark is {{ r.pass_mark }}%. Go back over the unit and take the test again whenever you are ready.{% endif %}</p>
+  {% if r.voided %}<p class="app-quiet">{{ r.voided }} question{{ r.voided|pluralize }} did not count, because {{ r.voided|pluralize:"its key is,their keys are" }} now in doubt.</p>{% endif %}
+  <form method="post" action="{% url 'test_start' unit.pk %}">{% csrf_token %}
+    <button type="submit" class="app-secondary">Take the test again</button>
+    <a class="app-cancel" href="/{{ unit.legacy_path }}">Study the unit</a>
+    {% if course_home %}<a class="app-cancel" href="/{{ course_home }}">The course</a>{% endif %}
+  </form>
+</div>
+{% for q in r.items %}
+<section class="tq tr-q {% if q.voided %}is-void{% elif q.correct %}is-right{% else %}is-wrong{% endif %}">
+  <h2 class="tr-head">Question {{ q.n }}: {% if q.voided %}not counted{% elif q.correct %}right{% elif q.answered %}wrong{% else %}not answered{% endif %}</h2>
+  <div class="tq-stem">{{ q.stem_html|safe }}</div>
+  {% if q.qtype == "numeric" %}
+  <p>Your answer: <b>{{ q.yours|default:"none" }}</b>. The answer: <b>{{ q.key }}</b>{% if q.tolerance %} (to within {{ q.tolerance|floatformat:"-6" }}){% endif %}.</p>
+  {% elif q.qtype == "match" %}
+  <div class="scroll"><table class="tq-match"><tr><th>Item</th><th>Yours</th><th>Answer</th></tr>
+    {% for row in q.rows %}<tr><td>{{ row.left|safe }}</td><td>{{ row.yours|default:"none"|safe }}</td><td>{{ row.key|safe }}</td></tr>{% endfor %}
+  </table></div>
+  {% else %}
+  <ul class="tq-options tr-options">
+    {% for o in q.options %}
+    <li class="{% if o.key %}is-key{% endif %}{% if o.chosen %} is-chosen{% endif %}"><span class="tq-letter">{{ o.display }}</span>
+      <span class="tq-text">{{ o.text_html|safe }}</span>
+      {% if o.key %}<span class="tr-tag">the answer</span>{% endif %}{% if o.chosen %}<span class="tr-tag tr-yours">your answer</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% if q.voided %}<p class="app-quiet">{{ q.flag_reason }}</p>{% endif %}
+  {% if q.solution_html %}<div class="tr-working"><b>Working.</b> {{ q.solution_html|safe }}</div>{% endif %}
+</section>
+{% endfor %}
+<p><a href="/{{ unit.legacy_path }}">Back to the unit</a> to go over what it teaches.</p>
+{% endblock %}

@@ -136,3 +136,9 @@ def units_by_course(course_ids=None):
     for u in qs:
         out.setdefault(u.course, []).append(u)
     return out
+
+
+def course_home(page_id):
+    """The course home a unit belongs to, e.g. statistics/sampling-theory/index.html."""
+    unit = unit_by_path(page_id)
+    return unit.course.path + "/index.html" if unit else None

@@ -1,0 +1,33 @@
+{% extends "base_app.html" %}
+{% block head_title %}Unit test{% endblock %}
+{% block content %}
+<p class="app-quiet"><a href="/{{ unit.legacy_path }}">Back to the unit</a></p>
+<h1>Unit test</h1>
+<p class="app-lead">{{ unit.title }}</p>
+{% if locked %}
+<div class="app-card"><p>{{ locked }}</p>
+<p><a href="/{{ unit.legacy_path }}">Go to the unit</a></p></div>
+{% else %}
+<div class="app-card">
+  <ul class="app-facts">
+    <li><b>{{ ut.n_questions }} questions</b>, drawn from this unit's checked questions.</li>
+    <li><b>Pass at {{ ut.pass_mark }}%</b>. A pass marks the unit as passed on your dashboard.</li>
+    <li><b>No time limit.</b> Each answer is saved as you choose it, so you can leave and come back.</li>
+    <li>Afterwards you see every answer with its working. You can take the test again whenever you like;
+      new questions come first, and your best score is kept.</li>
+  </ul>
+  <form method="post" action="{% url 'test_start' unit.pk %}">{% csrf_token %}
+    <button type="submit">{% if history %}Take the test again{% else %}Start the test{% endif %}</button>
+  </form>
+</div>
+{% endif %}
+{% if history %}
+<h2>Your attempts</h2>
+<ul class="app-links">
+  {% for a in history %}
+  <li><a href="{% url 'test_result' a.pk %}">{{ a.submitted_at|date:"j M Y, H:i" }}</a>:
+    {{ a.score|floatformat:0 }} of {{ a.max_score|floatformat:0 }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

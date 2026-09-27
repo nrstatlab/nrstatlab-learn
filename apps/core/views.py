@@ -33,7 +33,7 @@ def page(request, path=""):
     found = study.find(legacy)
     if found is None:
         return not_found(request)
-    return HttpResponse(inject(study.render_html(found), request), content_type=HTML)
+    return HttpResponse(inject(study.render_html(found), request, found.legacy_path), content_type=HTML)
 
 
 def not_found(request, exception=None):

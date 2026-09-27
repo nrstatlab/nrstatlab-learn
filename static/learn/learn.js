@@ -26,8 +26,11 @@
   var state;
   try { state = JSON.parse(node.textContent); } catch (e) { return; }
 
-  var store;
-  try { store = window.localStorage; store.getItem(KEY); } catch (e) { return; }
+  var here = decodeURIComponent(window.location.pathname.slice(1));
+  if (here === '' || here.slice(-1) === '/') here += 'index.html';
+
+  var store = null;
+  try { store = window.localStorage; store.getItem(KEY); } catch (e) { store = null; }
   function get(k) { try { return store.getItem(k); } catch (e) { return null; } }
   function set(k, v) { try { store.setItem(k, v); return true; } catch (e) { return false; } }
   function del(k) { try { store.removeItem(k); } catch (e) { /* blocked */ } }
@@ -39,8 +42,75 @@
     return null;
   }
 
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function whenReady(fn) {
+    // progress.js is deferred, so its toggles exist by DOMContentLoaded.
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    else fn();
+  }
+
+  // ---- the unit's test, under the last "Mark this unit done" ------------------
+  var test = state.test;
+  var testBox = null;
+  function drawTest(done) {
+    if (!test) return;
+    if (!testBox) {
+      testBox = el('div', 'learn-test');
+      testBox.setAttribute('role', 'region');
+      testBox.setAttribute('aria-label', 'Unit test');
+      var toggles = document.querySelectorAll('.progress-toggle');
+      // Inside the lower "Mark this unit done" block: it is the unit's progress
+      // control, and the site's own checks treat that block as added by script.
+      // Without storage progress.js draws no toggle; the box then goes where its
+      // lower toggle would have been, above the page's own next/previous links.
+      var foot = document.querySelector('.page-nav, .pagination');
+      if (toggles.length) {
+        toggles[toggles.length - 1].appendChild(testBox);
+      } else if (foot) {
+        foot.parentNode.insertBefore(testBox, foot);
+      } else {
+        testBox = null;
+        return;
+      }
+    }
+    testBox.textContent = '';
+    var what = el('p', null);
+    what.appendChild(el('b', null, 'Unit test: '));
+    what.appendChild(document.createTextNode(test.n + ' questions, pass at ' + test.pass_mark + '%.'));
+    testBox.appendChild(what);
+    var p = el('p', 'learn-test-do');
+    if (!state.signed_in) {
+      var a = el('a', null, 'Sign in');
+      a.href = test.sign_in;
+      p.appendChild(a);
+      p.appendChild(document.createTextNode(' to take it once you have studied the unit.'));
+    } else if (test.passed || done) {
+      var go = el('a', 'learn-test-go', test.resume ? 'Carry on with the test' :
+                  test.best != null ? 'Take the test again' : 'Take the test');
+      go.href = test.url;
+      p.appendChild(go);
+      if (test.passed) p.appendChild(document.createTextNode(' Passed'));
+      if (test.best != null) p.appendChild(document.createTextNode(
+        (test.passed ? ', best ' : ' Best so far: ') + Math.round(test.best) + '%.'));
+    } else {
+      p.appendChild(document.createTextNode('It opens when you mark this unit done.'));
+    }
+    testBox.appendChild(p);
+  }
+
+  if (!store) {                                   // storage blocked: the page as it is, plus the test
+    whenReady(function () { drawTest(!!(state.done || {})[here]); });
+    return;
+  }
+
   // ---- signed out: give the browser its own progress back -------------------
   if (!state.signed_in) {
+    whenReady(function () { drawTest(false); });
     if (get(MARK) === null) return;               // never signed in here: nothing to undo
     var guest = get(GUEST);
     if (guest !== null && parse(guest)) set(KEY, guest);
@@ -62,9 +132,6 @@
   var last = (before === null || before === state.account) && local ? local.last : null;
   set(KEY, JSON.stringify({ v: 1, done: state.done || {}, last: last || null }));
 
-  var here = decodeURIComponent(window.location.pathname.slice(1));
-  if (here === '' || here.slice(-1) === '/') here += 'index.html';
-
   function post(url, data) {
     return fetch(url, {
       method: 'POST',
@@ -75,13 +142,6 @@
       return r.ok ? r.json() : Promise.reject(r.status);
     });
   }
-  function el(tag, cls, text) {
-    var e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text != null) e.textContent = text;
-    return e;
-  }
-
   // ---- "Mark this unit done": send each press to the account ------------------
   var correcting = false;
   function note(button, text) {
@@ -91,7 +151,7 @@
     if (!n) {
       n = el('span', 'learn-note');
       n.setAttribute('role', 'status');
-      box.appendChild(n);
+      box.insertBefore(n, button.nextSibling);
     }
     n.textContent = text;
   }
@@ -103,6 +163,7 @@
     var done = !!(s && s.done[here]);
     post('/me/progress/studied', { page: here, done: done }).then(function (r) {
       note(b, '');
+      drawTest(r.done);
       if (r.done !== done) {
         // The account says otherwise (a unit whose test is passed stays done):
         // press again, unsent, so the page shows the account's state.
@@ -155,6 +216,8 @@
     if (nav) nav.parentNode.insertBefore(box, nav.nextSibling);
     else document.body.insertBefore(box, document.body.firstChild);
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', offer);
-  else offer();
+  whenReady(function () {
+    offer();
+    drawTest(!!(state.done || {})[here]);
+  });
 })();

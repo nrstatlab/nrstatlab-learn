@@ -10,3 +10,7 @@ def store_exams(exams):
 
 def exam_count():
     return Exam.objects.count()
+
+
+def exam_by_slug(slug):
+    return Exam.objects.filter(slug=slug).first()

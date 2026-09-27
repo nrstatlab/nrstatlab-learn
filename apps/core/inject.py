@@ -20,6 +20,7 @@ from django.templatetags.static import static
 from django.utils.html import escape, json_script
 
 from apps.accounts import services as accounts
+from apps.assessments import services as assessments
 from apps.progress import services as progress
 
 OPEN, CLOSE = "<!-- nrstat-learn -->", "<!-- /nrstat-learn -->"
@@ -33,21 +34,30 @@ ICON = ('<svg class="sitenav-icon" width="16" height="16" viewBox="0 0 24 24" ar
         '<path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="none" stroke="currentColor" stroke-width="2"/></svg>')
 
 
-def account_state(request):
+def account_state(request, page_id=None):
+    """What learn.js needs: whether anyone is signed in, their progress, and, on a unit
+    page whose test is open to take, the test (never anything about its answers)."""
     user = request.user
-    if not user.is_authenticated:
-        return {"signed_in": False}
-    return {
-        "signed_in": True,
-        "account": accounts.account_marker(user),
-        "done": progress.done_map(user),
-        "offer_import": accounts.import_offer_open(user),
-        "csrf": get_token(request),
-    }
+    state = {"signed_in": False}
+    if user.is_authenticated:
+        state = {
+            "signed_in": True,
+            "account": accounts.account_marker(user),
+            "done": progress.done_map(user),
+            "offer_import": accounts.import_offer_open(user),
+            "csrf": get_token(request),
+        }
+    if page_id:
+        test = assessments.availability(user, page_id)
+        if test["has_test"]:
+            state["test"] = test
+            if not user.is_authenticated:
+                state["test"]["sign_in"] = "/accounts/login/?next=" + quote("/" + page_id, safe="/")
+    return state
 
 
-def head_fragment(request, state=None):
-    state = account_state(request) if state is None else state
+def head_fragment(request, state=None, page_id=None):
+    state = account_state(request, page_id) if state is None else state
     # static() gives the hashed, long-cached names in production.
     return (OPEN + f'<link rel="stylesheet" href="{static("learn/learn.css")}">'
             + json_script(state, "nrstat-account")
@@ -68,13 +78,13 @@ def _before(html, anchor, fragment, start=0):
     return html if i < 0 else html[:i] + fragment + html[i:]
 
 
-def inject(html, request):
+def inject(html, request, page_id=None):
     nav_at = html.find(NAV)
     if nav_at < 0 and PROGRESS_SCRIPT not in html:
         return html
     if nav_at >= 0:
         html = _before(html, NAV_END, nav_fragment(request), nav_at)
-    return _before(html, HEAD_END, head_fragment(request))
+    return _before(html, HEAD_END, head_fragment(request, page_id=page_id))
 
 
 def strip(html):

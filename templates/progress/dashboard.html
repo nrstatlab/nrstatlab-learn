@@ -12,7 +12,7 @@
   {% else %}
   <p>Last marked done: <a href="/{{ last.path }}">{{ last.title }}</a></p>
   {% endif %}
-  {% if streak %}<p class="app-streak">{{ streak }} day{{ streak|pluralize }} in a row with a unit done.</p>{% endif %}
+  {% if streak %}<p class="app-streak">{{ streak }} day{{ streak|pluralize }} in a row with a unit done or a test taken.</p>{% endif %}
 </section>
 {% endif %}
 
@@ -36,6 +36,18 @@
   <a href="/index.html">Choose a course</a>.</p>
   {% endif %}
 </section>
+
+{% if tests %}
+<section aria-labelledby="tests-h">
+  <h2 id="tests-h">Your last tests</h2>
+  <div class="scroll"><table class="app-tests">
+    {% for t in tests %}
+    <tr><td><a href="{% url 'test_result' t.attempt %}">{{ t.score|floatformat:0 }}%</a>{% if t.passed %} · passed{% endif %}</td>
+      <td><a href="/{{ t.path }}">{{ t.title }}</a></td></tr>
+    {% endfor %}
+  </table></div>
+</section>
+{% endif %}
 
 <section class="app-account" aria-labelledby="account-h">
   <h2 id="account-h">Your account</h2>

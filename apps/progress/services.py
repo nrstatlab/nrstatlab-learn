@@ -132,10 +132,49 @@ def course_summaries(user):
     return out
 
 
+def status_of(user, page_id):
+    """The learner's status for one unit (not_started when there is no record)."""
+    row = UP.objects.filter(user=user, unit__legacy_path=page_id).values_list("status", flat=True).first()
+    return row or UP.NOT_STARTED
+
+
+@transaction.atomic
+def record_test(user, page_id, *, score, passed, attempt_id):
+    """A submitted unit test (called by assessments): keeps the best score, and a
+    pass makes the unit "passed". Nothing lowers a status. Returns the new status."""
+    unit = study.unit_by_path(page_id)
+    if unit is None:
+        raise NotAUnit(page_id)
+    row, _ = UP.objects.select_for_update().get_or_create(user=user, unit=unit)
+    row.best_score = score if row.best_score is None else max(row.best_score, score)
+    if passed and row.status != UP.PASSED:
+        row.status, row.passed_at = UP.PASSED, timezone.now()
+        row.studied_at = row.studied_at or row.passed_at
+    row.save()
+    ActivityEvent.objects.create(user=user, kind="test", unit=unit,
+                                 data={"score": str(score), "passed": passed, "attempt": str(attempt_id)})
+    return row.status
+
+
+def recent_tests(user, n=5):
+    """The last n unit tests submitted: [{title, path, score, passed, attempt, at}]."""
+    out = []
+    for e in ActivityEvent.objects.filter(user=user, kind="test").select_related("unit").order_by("-at")[:n]:
+        out.append({"title": e.unit.title if e.unit else "", "path": e.unit.legacy_path if e.unit else "",
+                    "score": e.data.get("score"), "passed": e.data.get("passed"), "attempt": e.data.get("attempt"),
+                    "at": e.at})
+    return out
+
+
+STREAK_KINDS = ("studied", "test")
+
+
 def streak(user, today=None):
-    """Consecutive days (Asia/Kolkata) with a unit marked studied, ending today or
-    yesterday; a streak is not broken until a whole day passes without one."""
-    days = {_local_date(at) for at in ActivityEvent.objects.filter(user=user, kind="studied").values_list("at", flat=True)}
+    """Consecutive days (Asia/Kolkata) with a unit marked studied or a unit test
+    submitted, ending today or yesterday; a streak is not broken until a whole day
+    passes without one."""
+    days = {_local_date(at) for at in
+            ActivityEvent.objects.filter(user=user, kind__in=STREAK_KINDS).values_list("at", flat=True)}
     day = today or _local_date(timezone.now())
     if day not in days:
         day -= timedelta(days=1)
