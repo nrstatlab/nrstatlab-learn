@@ -6,8 +6,15 @@ from .engine import (  # noqa: F401
     BadAnswer,
     TestLocked,
     availability,
+    close,
     export,
+    grade,
     percent,
+    public_view,
+    reveal,
+    review_items,
+    save_answer,
+    start_paper,
     test_for_unit,
 )
 from .models import Question
@@ -21,21 +28,41 @@ def sit_test(user, page_id, right):
     """Take the unit's test as a learner who gets `right` questions right, and submit it.
     For demonstration data (setup_local) only; learners sit tests through the pages.
     Returns the submitted attempt."""
-    import json
-
     from . import engine
     from .models import UnitTest
 
     attempt = engine.start(user, UnitTest.objects.get(unit__legacy_path=page_id))
-    for n, uid in enumerate(attempt.question_uids, 1):
-        q = Question.objects.prefetch_related("choices").get(uid=uid)
-        if q.qtype == Question.MATCH:
-            key = json.loads(q.answer_text)
-            raw = {k: engine.token(attempt, uid, "right", v) for k, v in key.items()}
-        elif q.qtype == Question.NUMERIC:
-            raw = q.answer_text
-        else:
-            wanted = [c for c in q.choices.all() if c.is_correct == (n <= right) and not c.side]
-            raw = engine.token(attempt, uid, "option", wanted[0].label)
-        engine.save_answer(attempt, n, raw)
+    for n in range(1, len(attempt.question_uids) + 1):
+        answer_as(attempt, n, right=n <= right)
     return engine.submit(attempt)
+
+
+def answer_as(attempt, n, right):
+    """Save question n's answer as a learner who gets it right, or wrong (a single or
+    multiple choice question). For demonstration data (setup_local) only."""
+    import json
+
+    from . import engine
+
+    uid = attempt.question_uids[n - 1]
+    q = Question.objects.prefetch_related("choices").get(uid=uid)
+    if q.qtype == Question.MATCH:
+        key = json.loads(q.answer_text)
+        raw = {k: engine.token(attempt, uid, "right", v) for k, v in key.items()}
+    elif q.qtype == Question.NUMERIC:
+        raw = q.answer_text
+    else:
+        wanted = [c for c in q.choices.all() if c.is_correct == right and not c.side]
+        raw = engine.token(attempt, uid, "option", wanted[0].label)
+    return engine.save_answer(attempt, n, raw)
+
+
+def unit_links(uids):
+    """{question uid: {"title", "path"}}: the unit that teaches each question, where one is linked."""
+    from .models import QuestionUnit
+
+    out = {}
+    for uid, title, path in QuestionUnit.objects.filter(question__uid__in=list(uids)).values_list(
+            "question__uid", "unit__title", "unit__legacy_path").order_by("question__uid", "unit__order"):
+        out.setdefault(uid, {"title": title, "path": path})
+    return out

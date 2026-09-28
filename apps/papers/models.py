@@ -27,6 +27,7 @@ class PaperQuestion(models.Model):
     official_key = models.CharField(max_length=20, blank=True)
     withdrawn = models.BooleanField(default=False)
     withdrawn_note = models.TextField(blank=True)
+    section = models.CharField(max_length=80, blank=True, help_text="For the review's totals, e.g. Statistics")
 
     class Meta:
         ordering = ["paper", "number"]
@@ -34,5 +35,13 @@ class PaperQuestion(models.Model):
 
 
 class PaperAttempt(models.Model):
+    """A sitting of an old paper: in exam mode against the paper's own clock (when it
+    records one), or in practice, one question at a time."""
+
     attempt = models.OneToOneField("assessments.Attempt", on_delete=models.CASCADE, related_name="paper_attempt")
     paper = models.ForeignKey(SolvedPaper, on_delete=models.CASCADE, related_name="attempts")
+    deadline = models.DateTimeField(null=True, blank=True, help_text="Exam mode, when the paper records a duration")
+    position = models.PositiveSmallIntegerField(default=1, help_text="Practice mode: the question on screen")
+    revealed = models.JSONField(default=list, blank=True, help_text="Practice mode: questions whose solution was shown")
+    # Decided when the paper is submitted: {number: reason} for each question that did not count.
+    not_counted = models.JSONField(default=dict, blank=True)

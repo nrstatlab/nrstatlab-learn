@@ -152,10 +152,19 @@ def _questions(attempt):
 
 
 def _order(attempt, q, choices):
-    rng = random.Random(f"{attempt.seed}:{q.uid}")
+    """Unit tests shuffle each question's options from the attempt's seed. An old paper
+    keeps the order it was printed in, as the candidates saw it."""
     choices = list(choices)
-    rng.shuffle(choices)
+    if attempt.kind == Attempt.PAPER:
+        return choices
+    random.Random(f"{attempt.seed}:{q.uid}").shuffle(choices)
     return choices
+
+
+def _display(attempt, c, k):
+    """An option's letter on the page: A, B, C… in a unit test; on an old paper, the
+    label the paper printed (1–4 on the APPSC papers)."""
+    return c.label if attempt.kind == Attempt.PAPER else "ABCDEFGH"[k]
 
 
 def public_view(attempt):
@@ -180,7 +189,7 @@ def public_view(attempt):
         else:
             chosen = set(answer.get("choices", [])) | ({answer["choice"]} if answer.get("choice") else set())
             item["options"] = [{"token": token(attempt, q.uid, "option", c.label), "text_html": c.text_html,
-                                "display": "ABCDEFGH"[k], "chosen": c.label in chosen}
+                                "display": _display(attempt, c, k), "chosen": c.label in chosen}
                                for k, c in enumerate(_order(attempt, q, [c for c in q.choices.all() if not c.side]))]
         out.append(item)
     return out
@@ -271,29 +280,41 @@ def percent(score, max_score):
     return (Decimal(score) * 100 / Decimal(max_score)).quantize(Decimal("0.01"))
 
 
+def grade(attempt):
+    """Mark every response, and say for each question (in order) whether it counts,
+    was answered and is right. A question that is not published when this runs
+    (flagged, or retired) does not count: its response is marked neither right nor
+    wrong. Shared by unit tests and old papers, so doubt is treated alike."""
+    responses = {r.question_id: r for r in attempt.responses.all()}
+    out = []
+    for n, q in enumerate(_questions(attempt), 1):
+        r = responses.get(q.pk)
+        counts = q.status == Question.PUBLISHED
+        ok = counts and is_correct(q, r.answer if r else None)
+        if r:
+            r.correct = ok if counts else None
+            r.save(update_fields=["correct"])
+        out.append({"n": n, "uid": q.uid, "counts": counts, "answered": r is not None, "correct": ok})
+    return out
+
+
+def close(attempt, score, max_score):
+    """Freeze a scored attempt."""
+    attempt.score, attempt.max_score, attempt.submitted_at = score, max_score, timezone.now()
+    attempt.save(update_fields=["score", "max_score", "submitted_at"])
+    return attempt
+
+
 @transaction.atomic
 def submit(attempt):
-    """Score and freeze. Returns the attempt. A pass marks the unit passed."""
+    """Score and freeze a unit test. Returns the attempt. A pass marks the unit passed."""
     attempt = Attempt.objects.select_for_update().get(pk=attempt.pk)
     if attempt.submitted_at:
         return attempt
-    responses = {r.question_id: r for r in attempt.responses.all()}
-    score = max_score = 0
-    for q in _questions(attempt):
-        r = responses.get(q.pk)
-        if q.status != Question.PUBLISHED:  # voided: flagged or retired since the draw
-            if r:
-                r.correct = None
-                r.save(update_fields=["correct"])
-            continue
-        max_score += 1
-        ok = is_correct(q, r.answer if r else None)
-        score += ok
-        if r:
-            r.correct = ok
-            r.save(update_fields=["correct"])
-    attempt.score, attempt.max_score, attempt.submitted_at = score, max_score, timezone.now()
-    attempt.save(update_fields=["score", "max_score", "submitted_at"])
+    marks = grade(attempt)
+    score = sum(1 for m in marks if m["counts"] and m["correct"])
+    max_score = sum(1 for m in marks if m["counts"])
+    close(attempt, score, max_score)
     ut = attempt.unit_test
     pct = percent(score, max_score)
     progress.record_test(attempt.user, ut.unit.legacy_path, score=pct, passed=bool(max_score) and pct >= ut.pass_mark,
@@ -301,19 +322,20 @@ def submit(attempt):
     return attempt
 
 
-def result_view(attempt):
-    """After submission: every question with the learner's answer, the key and the
-    working, and the unit to go back to."""
-    if not attempt.submitted_at:
-        raise AttemptClosed("Not submitted yet.")
+def review_items(attempt, only=None):
+    """Every question with the learner's answer, the key and the working: for a
+    submitted attempt, or (only=n) one question of a practice attempt, through reveal()."""
     responses = {r.question_id: r for r in attempt.responses.all()}
     items = []
     for i, q in enumerate(_questions(attempt), 1):
+        if only is not None and i != only:
+            continue
         r = responses.get(q.pk)
         answer = r.answer if r else None
-        item = {"n": i, "qtype": q.qtype, "stem_html": q.stem_html, "solution_html": q.solution_html,
+        correct = bool(r and r.correct) if attempt.submitted_at else is_correct(q, answer)
+        item = {"n": i, "uid": q.uid, "qtype": q.qtype, "stem_html": q.stem_html, "solution_html": q.solution_html,
                 "voided": q.status != Question.PUBLISHED, "flag_reason": q.flag_reason,
-                "correct": bool(r and r.correct), "answered": bool(answer)}
+                "correct": correct, "answered": bool(answer)}
         if q.qtype == Question.MATCH:
             key = json.loads(q.answer_text)
             texts = {c.label: c.text_html for c in q.choices.all()}
@@ -324,16 +346,46 @@ def result_view(attempt):
                         tolerance=q.tolerance)
         else:
             chosen = set((answer or {}).get("choices", [])) | ({answer["choice"]} if answer and answer.get("choice") else set())
-            item["options"] = [{"text_html": c.text_html, "display": "ABCDEFGH"[k], "chosen": c.label in chosen,
+            item["options"] = [{"text_html": c.text_html, "display": _display(attempt, c, k), "chosen": c.label in chosen,
                                 "key": c.is_correct}
                                for k, c in enumerate(_order(attempt, q, [c for c in q.choices.all() if not c.side]))]
         items.append(item)
+    return items
+
+
+def result_view(attempt):
+    """After a unit test: every question, and the unit to go back to."""
+    if not attempt.submitted_at:
+        raise AttemptClosed("Not submitted yet.")
+    items = review_items(attempt)
     ut = attempt.unit_test
     pct = percent(attempt.score, attempt.max_score)
     return {"items": items, "score": attempt.score, "max_score": attempt.max_score, "percent": pct,
             "passed": bool(attempt.max_score) and pct >= ut.pass_mark, "pass_mark": ut.pass_mark,
             "unit_title": ut.unit.title, "unit_path": ut.unit.legacy_path,
             "voided": sum(1 for i in items if i["voided"])}
+
+
+# ---------------------------------------------------------------- old papers (papers.services)
+
+def start_paper(user, uids, mode):
+    """A new attempt at an old paper: its questions in the paper's order."""
+    return Attempt.objects.create(user=user, kind=Attempt.PAPER, mode=mode, seed=0, question_uids=list(uids))
+
+
+def reveal(attempt, n):
+    """Practice mode: one question's key and working, on the learner's asking. Never
+    for an exam attempt, whose keys wait for the review."""
+    if attempt.kind != Attempt.PAPER or attempt.mode != "practice":
+        raise AttemptClosed("Solutions are shown after an exam is submitted, not during it.")
+    try:
+        n = int(n)
+    except (TypeError, ValueError) as e:
+        raise BadAnswer("No such question.") from e
+    items = review_items(attempt, only=n)
+    if not items:
+        raise BadAnswer("No such question.")
+    return items[0]
 
 
 def history(user, ut):

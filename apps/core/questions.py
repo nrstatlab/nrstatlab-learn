@@ -52,6 +52,7 @@ CONTESTED = {
 }
 AUDIT_FLAG = "Contested in the September 2026 audit (" + AUDIT + " §5, item 1): {}"
 PASSAGE_SPAN = 5  # a comprehension passage on the 2026 page serves the five questions after it
+UGC_2026_PAPER_I, UGC_2026_PAPER_II = "Paper I — General Paper", "Paper II — Statistics"
 
 
 @dataclass
@@ -158,7 +159,10 @@ def read_ugc_2026(root):
              # The page records no official duration or marking scheme, so none is claimed.
              "duration_minutes": None, "marking_scheme": None,
              "questions": [{"number": int(i["source_ref"][1:]), "uid": i["uid"],
-                            "official_key": next(c[0] for c in i["choices"] if c[2])} for i in items]}
+                            "official_key": next(c[0] for c in i["choices"] if c[2]),
+                            # The page's own two halves: Q1-50 and Q51-150.
+                            "section": UGC_2026_PAPER_I if int(i["source_ref"][1:]) <= 50 else UGC_2026_PAPER_II}
+                           for i in items]}
     return items, 150, paper
 
 
@@ -181,9 +185,11 @@ def read_appsc(root):
         raw = json.loads((root / "tools" / "exams" / f"appsc_paper_{year}.json").read_text(encoding="utf-8"))
         notes = {q["n"]: q.get("note", "") for q in raw["questions"]}
         topics = paper["data"].TOPICS
+        # The page's own parts (Economics, Financial Accounting, Statistics, Computers), by syllabus item.
+        section_of = {item: label for _slug, label, members in paper["data"].GROUPS for item in members}
         pdf = paper["source"]
         items, pqs = [], []
-        for q, _item, topic, working, flag in rows:
+        for q, item_no, topic, working, flag in rows:
             n, key = q["n"], q["key"]
             options = [gen.option_html(o, images, maths) for o in q["options"]]
             unit_path = topics[topic][1]
@@ -202,7 +208,8 @@ def read_appsc(root):
                 "units": [unit_path] if unit_path else [], "recompute_log": COMMISSION_KEY.format(pdf=pdf),
             })
             pqs.append({"number": n, "uid": items[-1]["uid"], "official_key": str(key) if key else "",
-                        "withdrawn": key is None, "withdrawn_note": notes[n] if key is None else ""})
+                        "withdrawn": key is None, "withdrawn_note": notes[n] if key is None else "",
+                        "section": section_of[item_no]})
         negative = header.get("Section Negative Marks")
         out.append((f"appsc-aso-{year}-", items, int(header["Number of Questions"]), {
             "slug": f"appsc-aso-{year}-paper-ii", "exam": "appsc",
