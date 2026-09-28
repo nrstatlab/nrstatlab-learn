@@ -53,3 +53,5 @@ once). They run last, because a live server empties the test database after each
   own progress script, the dashboard, export and deletion. `docs/PHASE-2-REPORT.md`.
 - **Phase 3, unit tests:** the question bank (950 questions, the doubtful keys never scored) and a
   ten-question test on each unit that has enough checked questions. `docs/PHASE-3-REPORT.md`.
+- **Phase 4, old papers:** the three solved papers, practised one question at a time or sat as an
+  exam under each paper's own recorded rules, with a review by section. `docs/PHASE-4-REPORT.md`.

@@ -39,7 +39,7 @@ docker compose up --build
 |---|---|
 | `owner@localhost` | You, as staff: the admin at http://localhost:8000/staff/ |
 | `new.learner@localhost` (Meera) | A learner who has done nothing yet |
-| `progress.learner@localhost` (Arjun) | A learner with progress: Descriptive Statistics Unit 3 studied and its test failed (30%); UGC NET Unit 7 studied and its test passed (100%) |
+| `progress.learner@localhost` (Arjun) | A learner with progress: Descriptive Statistics Unit 3 studied and its test failed (30%); UGC NET Unit 7 studied and its test passed (100%); the APPSC 2025 paper sat as an exam (80.10 of 140) |
 
 **Emails.** Sign-up and password reset emails are not sent anywhere. They are printed in the window
 where `docker compose up` runs. If you started it with `-d`, run `docker compose logs web` to see
@@ -147,6 +147,54 @@ A tip: use a private (incognito) window as a second browser, or as a second lear
 - [ ] **3.11 On a phone-sized window.** Narrow the browser window to about the width of a phone. The
   bar, a unit page with its test box, and a test all fit without scrolling sideways.
 
+### Phase 4: old papers
+
+The three solved papers can be practised one question at a time, or sat as an exam under the paper's
+own rules. Sign in as `new.learner@localhost` unless a check says otherwise.
+
+- [ ] **4.1 The box on the solved pages.** Signed out, open the solved APPSC 2025 paper
+  (http://localhost:8000/exams/appsc/solved-2025-paper-ii.html). Under the bar, a box says "Try
+  this paper yourself … (150 questions, 150 minutes, −0.33 for a wrong answer)", with **Sign in to
+  practise or sit it**. Signed in, the button reads **Practise or sit it**. The solved APPSC 2022 and UGC NET 2026 pages have the
+  same box.
+- [ ] **4.2 The rules, from the paper itself.** http://localhost:8000/papers/ lists the three papers.
+  Each paper's page states:
+  - the number of questions;
+  - the time, and where it comes from;
+  - the marking, and where it comes from;
+  - the questions that do not count, and why.
+
+  APPSC 2025: 150 minutes, +1 and −0.33, Q134 withdrawn, 9 keys in doubt, **140 count**. APPSC 2022:
+  Q51 and Q81 withdrawn, 12 keys in doubt, **136 count**.
+- [ ] **4.3 UGC NET 2026 has no timer and no negative marks.** Its page says the paper records
+  neither, so there is no clock, each question is one mark, and 143 count.
+- [ ] **4.4 Practise.** On the UGC NET 2026 page press **Practise**. Choose an answer and press
+  **Check my answer**: it says right or not, shows the key and the working, and "Study this" where
+  the site teaches it. On another question, **Show the solution** shows the same without
+  answering.
+- [ ] **4.5 Practice keeps your place.** Go on a few questions with **Next →**, then leave and come
+  back to the paper's page: **Carry on practising** returns you to the same question.
+- [ ] **4.6 Sit APPSC 2025 as an exam.** On its page press **Sit the paper**. The whole paper is on
+  one page, in its sections, with a bar that stays in view: "N of 149 answered" and the time left,
+  counting down. **Questions** opens a grid of numbers; answered ones turn solid. Reload the page:
+  your answers and the clock are unchanged.
+- [ ] **4.7 A withdrawn question.** Q134 is greyed, with the Commission's note, and has nothing to
+  choose.
+- [ ] **4.8 Submit and review.** Answer a few, then **Submit the paper** (it asks first if some are
+  blank). The review shows:
+  - the score out of 140, with 0.33 taken off for each wrong answer;
+  - a table by section: right, wrong, blank, not counted, marks;
+  - "10 questions did not count", and each of them says why;
+  - every question with your answer, the official key, the working and "Study this".
+
+  Signed in as `progress.learner@localhost`, the review of the sitting already there reads
+  **80.10 of 140.00**: 90 right, 30 wrong.
+- [ ] **4.9 The dashboard** lists the papers you have sat under "Old papers", each score linking to
+  its review, and a paper sat counts towards the day streak.
+- [ ] **4.10 In the dark and on a phone.** In dark mode, and in a phone-sized window, the paper
+  pages are readable and nothing needs scrolling sideways, except the section table, which scrolls
+  within itself.
+
 ### Last of all
 
 - [ ] **L.1 Five wrong passwords lock sign-in.** Do this one last: it locks the account for a while.
@@ -159,7 +207,6 @@ A tip: use a private (incognito) window as a second browser, or as a second lear
 
 ## 3. What is not here yet
 
-- **Phase 4, old papers:** practice and exam mode for the three solved papers.
 - **Phase 5:** readiness for your exam.
 - **Phase 6:** the quality loop, item statistics and review.
 - **Phase 7:** launch: security, hosting and the domain.
