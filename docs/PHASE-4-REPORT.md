@@ -15,7 +15,7 @@ Everything here runs on a computer only. Nothing is online until the owner signs
 | The score is right | **Met.** The done-when test sits APPSC 2025: 100 counted questions right, 20 wrong, and Q134 and the doubtful questions answered too. It scores **93.40 of 140.00**, computed by hand from `content/tools/exams/appsc_paper_2025.json` and the flag list, not from app code |
 | Withdrawn and doubtful questions do not count (the owner's decision) | **Met.** Q134 (2025), and Q51 and Q81 (2022), are shown greyed with the Commission's note and cannot be answered. Questions whose key the solved page doubts count neither for nor against, and the review says why for each. A doubtful key the owner publishes in the admin counts from then on |
 | The review | **Met.** The score, the maximum and the percentage; totals by section (right, wrong, blank, not counted, marks), which add up to the score; "N questions did not count"; then every question with the learner's answer, the official key, the working and "Study this" |
-| CI | CI_RESULT |
+| CI | **Green on GitHub.** Run #10 on `a3ca53a` passed every step: lint, checks, migrations, both import dry runs, and the full test suite with the browser tests |
 
 ## The rules each paper runs under
 
