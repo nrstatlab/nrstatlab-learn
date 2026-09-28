@@ -40,6 +40,7 @@
       body: JSON.stringify({ question: Number(fs.getAttribute('data-n')), answer: answerOf(fs) })
     }).then(function (r) {
       if (r.ok) { status.textContent = 'Saved'; return; }
+      if (r.status === 409) form.dispatchEvent(new CustomEvent('learn:closed'));
       return r.json().then(function (j) { status.textContent = j.error || 'Not saved.'; });
     }, function () {
       status.textContent = 'Not saved yet (no connection); it will still be sent when you submit.';
@@ -47,10 +48,12 @@
   }
   form.addEventListener('change', function (e) {
     var fs = e.target.closest('fieldset.tq');
-    if (fs) save(fs);
+    if (fs && !fs.hasAttribute('data-withdrawn')) save(fs);
   });
   form.addEventListener('submit', function (e) {
-    var left = Array.prototype.filter.call(form.querySelectorAll('fieldset.tq'), function (fs) { return !answered(fs); });
+    if (form.getAttribute('data-time-up')) return;          // the clock submitted it: no question to ask
+    var left = Array.prototype.filter.call(form.querySelectorAll('fieldset.tq:not([data-withdrawn])'),
+                                           function (fs) { return !answered(fs); });
     if (left.length && !window.confirm(left.length + ' question' + (left.length === 1 ? ' is' : 's are') +
                                        ' not answered. Submit anyway?')) {
       e.preventDefault();

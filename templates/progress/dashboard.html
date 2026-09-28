@@ -49,6 +49,18 @@
 </section>
 {% endif %}
 
+<section aria-labelledby="papers-h">
+  <h2 id="papers-h">Old papers</h2>
+  {% if papers %}
+  <div class="scroll"><table class="app-tests">
+    {% for p in papers %}
+    <tr><td><a href="{% url 'paper_review' p.attempt %}">{{ p.score }} of {{ p.max_score }}</a></td><td>{{ p.title }}</td></tr>
+    {% endfor %}
+  </table></div>
+  {% endif %}
+  <p><a href="{% url 'papers_index' %}">{% if papers %}All old papers{% else %}Practise or sit an old paper{% endif %}</a></p>
+</section>
+
 <section class="app-account" aria-labelledby="account-h">
   <h2 id="account-h">Your account</h2>
   <ul class="app-links">

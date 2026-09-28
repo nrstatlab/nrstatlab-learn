@@ -1,0 +1,39 @@
+{% extends "base_app.html" %}
+{% block head_title %}{{ paper.title }}{% endblock %}
+{% block content %}
+<p class="app-quiet"><a href="{% url 'papers_index' %}">Old papers</a> · <a href="/{{ paper.page_path }}">The solved paper</a></p>
+<h1>{{ paper.title }}</h1>
+<section class="app-card" aria-labelledby="rules-h">
+  <h2 id="rules-h">The rules</h2>
+  <ul class="app-facts">
+    <li><b>{{ r.count }} questions</b>{% if paper.held_on %}, as set on {{ paper.held_on|date:"j F Y" }}{% endif %}.</li>
+    <li>{% if r.duration %}<b>{{ r.duration }} minutes.</b> Duration as printed on the paper: {{ r.duration_source }}. In exam mode the clock starts when you begin, and the paper is submitted when it reaches zero.
+        {% else %}<b>No timer.</b> The paper records no official duration, so none is set.{% endif %}</li>
+    <li>{% if r.scheme_recorded %}<b>+{{ r.correct|floatformat:"-2" }} for a right answer, {{ r.wrong|floatformat:"-2" }} for a wrong one</b>, nothing for a blank. From {{ r.marking_source }}.
+        {% else %}<b>No marking scheme is recorded</b> for this paper, so each counted question is worth one mark and nothing is taken off for a wrong answer.{% endif %}</li>
+    {% if r.withdrawn %}<li><b>Not counted, withdrawn by the Commission:</b> {% for pq in r.withdrawn %}Q{{ pq.number }}{% if not forloop.last %}, {% endif %}{% endfor %}. They are shown, with the Commission's note.</li>{% endif %}
+    {% if r.doubtful %}<li><b>Not counted, key in doubt:</b> {% for pq in r.doubtful %}Q{{ pq.number }}{% if not forloop.last %}, {% endif %}{% endfor %}. The solved page questions their key, so they count neither for nor against you; the review says why for each.</li>{% endif %}
+    <li><b>{{ r.counted }} questions count</b> towards your score.</li>
+  </ul>
+</section>
+<div class="paper-modes">
+  <form method="post" action="{% url 'paper_start' paper.slug %}" class="app-card">{% csrf_token %}
+    <h2>Sit it as an exam</h2>
+    <p>The whole paper on one page{% if r.duration %}, against the clock{% endif %}. Answers are saved as you go; the key and the working come after you submit.</p>
+    <input type="hidden" name="mode" value="exam">
+    <button type="submit">{% if open_exam %}Carry on with the exam{% else %}Sit the paper{% endif %}</button>
+  </form>
+  <form method="post" action="{% url 'paper_start' paper.slug %}" class="app-card">{% csrf_token %}
+    <h2>Practise</h2>
+    <p>One question at a time, with no clock. Check each answer as you go and see its working; your place is kept.</p>
+    <input type="hidden" name="mode" value="practice">
+    <button type="submit" class="app-secondary">{% if open_practice %}Carry on practising{% else %}Practise{% endif %}</button>
+  </form>
+</div>
+{% if history %}
+<h2>Your sittings</h2>
+<ul class="app-links">
+  {% for h in history %}<li><a href="{% url 'paper_review' h.attempt_id %}">{{ h.attempt.submitted_at|date:"j M Y, H:i" }}</a>: {{ h.attempt.score }} of {{ h.attempt.max_score }} ({{ h.attempt.mode }})</li>{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

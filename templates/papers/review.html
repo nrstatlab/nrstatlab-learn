@@ -1,0 +1,34 @@
+{% extends "base_app.html" %}
+{% block head_title %}{{ paper.title }}: review{% endblock %}
+{% block extra_head %}{% include "includes/mathjax.html" %}{% endblock %}
+{% block content %}
+<p class="app-quiet"><a href="{% url 'paper_rules' paper.slug %}">{{ paper.title }}</a> · {{ r.mode }}</p>
+<h1>Your review</h1>
+<div class="app-card tr-summary">
+  <p class="tr-score"><b>{{ r.score }} of {{ r.max_score }}</b> ({{ r.percent|floatformat:0 }}%)</p>
+  <p class="app-quiet">{% if r.rules.scheme_recorded %}+{{ r.rules.correct|floatformat:"-2" }} for each right answer, {{ r.rules.wrong|floatformat:"-2" }} for each wrong one, nothing for a blank, as the paper's header records.{% else %}No marking scheme is recorded for this paper: each counted question is one mark, and nothing is taken off.{% endif %}</p>
+  {% if r.not_counted %}<p>{{ r.not_counted }} question{{ r.not_counted|pluralize }} did not count: withdrawn by the Commission, or with a key in doubt. Each says why below.</p>{% endif %}
+</div>
+<h2>By section</h2>
+<div class="scroll"><table class="app-tests review-sections">
+  <thead><tr><th scope="col">Section</th><th scope="col">Right</th><th scope="col">Wrong</th><th scope="col">Blank</th><th scope="col">Not counted</th><th scope="col">Marks</th></tr></thead>
+  <tbody>{% for sec in r.sections %}<tr><th scope="row">{{ sec.name }}</th><td>{{ sec.right }}</td><td>{{ sec.wrong }}</td><td>{{ sec.blank }}</td><td>{{ sec.not_counted }}</td><td>{{ sec.marks }}</td></tr>{% endfor %}</tbody>
+</table></div>
+<h2>Every question</h2>
+{% for q in r.items %}
+<section class="tq tr-q {% if q.outcome == 'right' %}is-right{% elif q.outcome == 'wrong' %}is-wrong{% else %}is-void{% endif %}" id="q{{ q.number }}">
+  <h3 class="tr-head">Q{{ q.number }}: {{ q.outcome }} <span class="app-quiet">· {{ q.section }}</span></h3>
+  <div class="tq-stem">{{ q.stem_html|safe }}</div>
+  <ul class="tq-options tr-options">
+    {% for o in q.options %}
+    <li class="{% if o.key %}is-key{% endif %}{% if o.chosen %} is-chosen{% endif %}"><span class="tq-letter">{{ o.display }}</span>
+      <span class="tq-text">{{ o.text_html|safe }}</span>
+      {% if o.key %}<span class="tr-tag">the official key</span>{% endif %}{% if o.chosen %}<span class="tr-tag tr-yours">your answer</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+  {% if q.reason %}<p class="tq-note"><b>Not counted.</b> {{ q.reason }}</p>{% endif %}
+  {% if q.solution_html %}<div class="tr-working"><b>Working.</b> {{ q.solution_html|safe }}</div>{% endif %}
+  <p class="app-quiet">{% if q.study %}Study this: <a href="/{{ q.study.path }}">{{ q.study.title }}</a>{% else %}Not taught on this site yet.{% endif %}</p>
+</section>
+{% endfor %}
+{% endblock %}

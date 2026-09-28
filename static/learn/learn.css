@@ -32,6 +32,11 @@
   border: 1px solid #1565a8;
 }
 .learn-banner .learn-yes { background: #1565a8; color: #fff; }
+.learn-paper a.learn-paper-go {
+  display: inline-block; font-weight: 600; text-decoration: none; padding: 7px 14px; border-radius: 999px;
+  background: #1565a8; color: #fff;
+}
+.learn-paper a.learn-paper-go:focus-visible { outline: 3px solid #17659f; outline-offset: 2px; }
 .learn-banner .learn-no { background: #fff; color: #1565a8; }
 .learn-banner button:focus-visible { outline: 3px solid #17659f; outline-offset: 2px; }
 .learn-banner button[disabled] { opacity: .6; cursor: default; }
@@ -56,6 +61,7 @@
 @media (prefers-color-scheme: dark) {
   .learn-banner { background: #1c283b; border-color: #2a3d5b; color: #c9d5ea; }
   .learn-banner .learn-yes { background: #a8cfed; border-color: #a8cfed; color: #10233a; }
+  .learn-paper a.learn-paper-go { background: #a8cfed; color: #10233a; }
   .learn-banner .learn-no { background: #18222a; border-color: #a8cfed; color: #a8cfed; }
   .learn-note { color: #fdba74; }
   .learn-test { background: #1c283b; border-color: #2a3d5b; color: #c9d5ea; }

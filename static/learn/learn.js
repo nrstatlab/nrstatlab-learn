@@ -103,6 +103,27 @@
     testBox.appendChild(p);
   }
 
+  // ---- a solved paper: practise it or sit it (under the site bar, outside the page's own column)
+  function drawPaper() {
+    var paper = state.paper;
+    if (!paper || document.querySelector('.learn-paper')) return;
+    var box = el('div', 'learn-banner learn-paper');
+    box.setAttribute('role', 'region');
+    box.setAttribute('aria-label', 'Sit this paper');
+    var rules = paper.n + ' questions' + (paper.minutes ? ', ' + paper.minutes + ' minutes' : ', no time limit') +
+                (paper.wrong ? ', \u2212' + paper.wrong + ' for a wrong answer' : '');
+    var p = el('p', null);
+    p.appendChild(el('b', null, 'Try this paper yourself: '));
+    p.appendChild(document.createTextNode('practise it one question at a time, or sit it as an exam (' + rules + ').'));
+    box.appendChild(p);
+    var go = el('a', 'learn-paper-go', state.signed_in ? 'Practise or sit it' : 'Sign in to practise or sit it');
+    go.href = state.signed_in ? paper.url : paper.sign_in;
+    box.appendChild(go);
+    var nav = document.querySelector('nav.sitenav');
+    if (nav) nav.parentNode.insertBefore(box, nav.nextSibling);
+  }
+  whenReady(drawPaper);
+
   if (!store) {                                   // storage blocked: the page as it is, plus the test
     whenReady(function () { drawTest(!!(state.done || {})[here]); });
     return;

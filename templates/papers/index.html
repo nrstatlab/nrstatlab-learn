@@ -1,0 +1,16 @@
+{% extends "base_app.html" %}
+{% block head_title %}Old papers{% endblock %}
+{% block content %}
+<h1>Old papers</h1>
+<p class="app-lead">Practise a past paper one question at a time, or sit it as an exam under the paper's
+own rules, then see every answer with its working.</p>
+<ul class="app-courses">
+  {% for row in rows %}
+  <li class="app-card">
+    <a class="app-course-title" href="{% url 'paper_rules' row.paper.slug %}">{{ row.paper.title }}</a>
+    <p class="app-quiet">{{ row.rules.count }} questions{% if row.rules.duration %} · {{ row.rules.duration }} minutes{% endif %}{% if row.paper.held_on %} · held {{ row.paper.held_on|date:"j F Y" }}{% endif %}</p>
+    {% if row.last %}<p>Your last sitting: <a href="{% url 'paper_review' row.last.attempt_id %}">{{ row.last.attempt.score }} of {{ row.last.attempt.max_score }}</a> ({{ row.last.attempt.mode }})</p>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

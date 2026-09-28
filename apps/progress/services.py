@@ -166,12 +166,22 @@ def recent_tests(user, n=5):
     return out
 
 
-STREAK_KINDS = ("studied", "test")
+def record_paper(user, *, title, slug, score, max_score, attempt_id):
+    """An old paper sat in exam mode (called by papers), for the dashboard and the streak."""
+    ActivityEvent.objects.create(user=user, kind="paper", data={
+        "title": title, "slug": slug, "score": score, "max_score": max_score, "attempt": str(attempt_id)})
+
+
+def recent_papers(user, n=5):
+    return [dict(e.data, at=e.at) for e in ActivityEvent.objects.filter(user=user, kind="paper").order_by("-at")[:n]]
+
+
+STREAK_KINDS = ("studied", "test", "paper")
 
 
 def streak(user, today=None):
-    """Consecutive days (Asia/Kolkata) with a unit marked studied or a unit test
-    submitted, ending today or yesterday; a streak is not broken until a whole day
+    """Consecutive days (Asia/Kolkata) with a unit marked studied, a unit test
+    submitted or a paper sat as an exam, ending today or yesterday; a streak is not broken until a whole day
     passes without one."""
     days = {_local_date(at) for at in
             ActivityEvent.objects.filter(user=user, kind__in=STREAK_KINDS).values_list("at", flat=True)}

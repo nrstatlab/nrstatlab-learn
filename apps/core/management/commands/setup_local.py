@@ -9,6 +9,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from apps.accounts import services as accounts
 from apps.assessments import services as assessments
+from apps.papers import services as papers
 from apps.progress import services as progress
 
 PASSWORD = "local-check-only"
@@ -44,6 +45,7 @@ class Command(BaseCommand):
                 progress.mark_studied(user, page)
             assessments.sit_test(user, STUDIED[0], right=3)       # 30%: not a pass
             assessments.sit_test(user, STUDIED[1], right=10)      # 100%: the unit is passed
+            papers.sit_paper(user, "appsc-aso-2025-paper-ii", right=90, wrong=30)   # 80.10 of 140.00
         self.stdout.write(self.style.SUCCESS(
             "\nReady. Open http://localhost:8000\n"
             f"  owner (admin at /staff/):   {OWNER[0]}\n"

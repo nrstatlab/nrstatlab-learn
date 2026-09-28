@@ -71,4 +71,5 @@ def dashboard(request):
         "courses": services.course_summaries(user),
         "streak": services.streak(user),
         "tests": services.recent_tests(user),
+        "papers": services.recent_papers(user),
     })

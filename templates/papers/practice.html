@@ -1,0 +1,46 @@
+{% extends "base_app.html" %}
+{% block head_title %}{{ paper.title }}: practice{% endblock %}
+{% block extra_head %}{% include "includes/mathjax.html" %}{% endblock %}
+{% block content %}
+<p class="app-quiet"><a href="{% url 'paper_rules' paper.slug %}">{{ paper.title }}</a> · practice · your place is kept</p>
+<h1>Q{{ q.number }} <span class="app-quiet">({{ n }} of {{ total }}, {{ q.section }})</span></h1>
+<form method="post" action="{% url 'paper_check' s.attempt_id %}" class="tq practice-q" id="answer">
+  {% csrf_token %}
+  <div class="tq-stem">{{ q.stem_html|safe }}</div>
+  {% if q.withdrawn %}
+  <p class="tq-note"><b>Withdrawn by the Commission.</b> {{ q.withdrawn_note }}</p>
+  <ol class="tq-plain">{% for o in q.options %}<li><span class="tq-letter">{{ o.display }}</span> <span class="tq-text">{{ o.text_html|safe }}</span></li>{% endfor %}</ol>
+  {% else %}
+  <ul class="tq-options">
+    {% for o in q.options %}
+    <li class="{% if revealed %}{% for ro in revealed.options %}{% if ro.display == o.display and ro.key %}is-key{% endif %}{% endfor %}{% endif %}">
+      <label><input type="radio" name="q{{ n }}" value="{{ o.token }}"{% if o.chosen %} checked{% endif %}{% if revealed %} disabled{% endif %}>
+      <span class="tq-letter">{{ o.display }}</span> <span class="tq-text">{{ o.text_html|safe }}</span></label></li>
+    {% endfor %}
+  </ul>
+  {% if revealed %}
+  <div class="practice-answer" role="status">
+    <p class="practice-verdict {% if revealed.answered %}{% if revealed.correct %}is-right{% else %}is-wrong{% endif %}{% endif %}">
+      {% if revealed.voided %}Its key is in doubt, so it would not count.{% elif not revealed.answered %}The answer:{% elif revealed.correct %}Right.{% else %}Not quite.{% endif %}
+      {% for ro in revealed.options %}{% if ro.key %}The key is <b>{{ ro.display }}</b>.{% endif %}{% endfor %}</p>
+    {% if revealed.voided %}<p class="app-quiet">{{ revealed.flag_reason }}</p>{% endif %}
+    {% if revealed.solution_html %}<div class="tr-working"><b>Working.</b> {{ revealed.solution_html|safe }}</div>{% endif %}
+    <p>{% if study %}Study this: <a href="/{{ study.path }}">{{ study.title }}</a>{% else %}<span class="app-quiet">Not taught on this site yet.</span>{% endif %}</p>
+  </div>
+  {% else %}
+  <p class="practice-actions"><button type="submit">Check my answer</button>
+    <button type="submit" class="app-secondary" name="show" value="1">Show the solution</button></p>
+  {% endif %}
+  {% endif %}
+</form>
+<nav class="practice-nav" aria-label="Questions">
+  {% if n > 1 %}<a class="practice-prev" href="?q={{ n|add:'-1' }}">← Previous</a>{% endif %}
+  {% if n < total %}<a class="practice-next" href="?q={{ n|add:'1' }}">Next →</a>{% endif %}
+  <form method="get" class="practice-jump"><label for="jump">Go to question</label>
+    <input id="jump" name="q" type="number" min="1" max="{{ total }}" value="{{ n }}" inputmode="numeric"><button type="submit" class="app-secondary">Go</button></form>
+</nav>
+<form method="post" action="{% url 'paper_submit' s.attempt_id %}" class="practice-finish">{% csrf_token %}
+  <p class="app-quiet">{{ seen }} of {{ total }} checked so far.</p>
+  <button type="submit" class="app-secondary">Finish, and see the whole review</button>
+</form>
+{% endblock %}

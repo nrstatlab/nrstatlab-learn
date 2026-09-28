@@ -1,0 +1,43 @@
+{% extends "base_app.html" %}
+{% load static %}
+{% block head_title %}{{ paper.title }}{% endblock %}
+{% block extra_head %}{% include "includes/mathjax.html" %}{% endblock %}
+{% block content %}
+<h1>{{ paper.title }}</h1>
+<div class="exam-bar" role="region" aria-label="Your progress through the paper">
+  <span class="exam-count"><b id="exam-answered">0</b> of {{ answerable }} answered</span>
+  {% if seconds_left is not None %}<span class="exam-clock" id="exam-clock" data-seconds-left="{{ seconds_left }}" role="timer" aria-live="off">{{ seconds_left }} s</span>{% endif %}
+  <details class="exam-nav"><summary>Questions</summary>
+    <ol class="exam-grid">
+      {% for q in questions %}<li><a href="#q{{ q.number }}" data-n="{{ q.n }}"{% if q.withdrawn %} class="is-withdrawn" title="Withdrawn"{% endif %}>{{ q.number }}</a></li>{% endfor %}
+    </ol>
+  </details>
+</div>
+<form method="post" action="{% url 'paper_submit' s.attempt_id %}" id="test-form" class="test-form exam-form"
+      data-answer-url="{% url 'paper_answer' s.attempt_id %}">
+  {% csrf_token %}<input type="hidden" name="from_form" value="1">
+  {% for q in questions %}
+  {% ifchanged q.section %}<h2 class="exam-section">{{ q.section }}</h2>{% endifchanged %}
+  <fieldset class="tq{% if q.withdrawn %} tq-withdrawn{% endif %}" id="q{{ q.number }}" data-n="{{ q.n }}" data-qtype="{{ q.qtype }}"{% if q.withdrawn %} data-withdrawn="1"{% endif %}>
+    <legend>Q{{ q.number }}</legend>
+    <div class="tq-stem">{{ q.stem_html|safe }}</div>
+    {% if q.withdrawn %}
+    <p class="tq-note"><b>Withdrawn by the Commission, and not counted.</b> {{ q.withdrawn_note }}</p>
+    <ol class="tq-plain">{% for o in q.options %}<li><span class="tq-letter">{{ o.display }}</span> <span class="tq-text">{{ o.text_html|safe }}</span></li>{% endfor %}</ol>
+    {% else %}
+    <ul class="tq-options">
+      {% for o in q.options %}
+      <li><label><input type="radio" name="q{{ q.n }}" value="{{ o.token }}"{% if o.chosen %} checked{% endif %}>
+        <span class="tq-letter">{{ o.display }}</span> <span class="tq-text">{{ o.text_html|safe }}</span></label></li>
+      {% endfor %}
+    </ul>
+    <p class="tq-status" role="status" aria-live="polite"></p>
+    {% endif %}
+  </fieldset>
+  {% endfor %}
+  <p class="tq-submit"><button type="submit">Submit the paper</button>
+    <span class="app-quiet">Answers cannot be changed after submitting.</span></p>
+</form>
+<script src="{% static 'learn/test.js' %}"></script>
+<script src="{% static 'learn/exam.js' %}"></script>
+{% endblock %}

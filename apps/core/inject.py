@@ -21,6 +21,7 @@ from django.utils.html import escape, json_script
 
 from apps.accounts import services as accounts
 from apps.assessments import services as assessments
+from apps.papers import services as papers
 from apps.progress import services as progress
 
 OPEN, CLOSE = "<!-- nrstat-learn -->", "<!-- /nrstat-learn -->"
@@ -48,6 +49,13 @@ def account_state(request, page_id=None):
             "csrf": get_token(request),
         }
     if page_id:
+        paper = papers.paper_for_page(page_id)
+        if paper:
+            r = papers.rules(paper)
+            state["paper"] = {"url": f"/papers/{paper.slug}/", "n": r["count"], "minutes": r["duration"],
+                              "wrong": str(-r["wrong"]) if r["scheme_recorded"] and r["wrong"] else None}
+            if not user.is_authenticated:
+                state["paper"]["sign_in"] = "/accounts/login/?next=" + quote(f"/papers/{paper.slug}/", safe="/")
         test = assessments.availability(user, page_id)
         if test["has_test"]:
             state["test"] = test
