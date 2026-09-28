@@ -220,3 +220,86 @@ def test_unanswered_questions_are_confirmed_before_submitting(page, site, learne
     page.get_by_role("button", name="Submit the test").click()
     assert messages == ["10 questions are not answered. Submit anyway?"]
     assert "/result" not in page.url
+
+
+def sign_in_to(page, site, email, path):
+    """Sign in on the sign-in page itself, then land on path (which may need a signed-in learner)."""
+    page.goto(f"{site}/accounts/login/?next=/{path}")
+    page.fill("input[name=login]", email)
+    page.fill("input[name=password]", PASSWORD)
+    page.locator("form button[type=submit]").click()
+    page.wait_for_url(f"{site}/{path}")
+
+
+def _paper_tok(sitting, n, correct=True):
+    from apps.assessments import engine
+    from apps.assessments.models import Question
+    uid = sitting.attempt.question_uids[n - 1]
+    choice = Question.objects.get(uid=uid).choices.filter(is_correct=correct).first()
+    return engine.token(sitting.attempt, uid, "option", choice.label)
+
+
+def test_sit_the_appsc_2025_paper_from_its_solved_page(page, site, learner):
+    from apps.papers.models import PaperAttempt
+
+    sign_in(page, site, learner.email, "exams/appsc/solved-2025-paper-ii.html")
+    box = page.locator(".learn-paper")
+    assert "150 minutes" in box.inner_text() and "0.33 for a wrong answer" in box.inner_text()
+    box.get_by_role("link").click()
+    page.get_by_role("button", name="Sit the paper").click()
+    page.wait_for_url(f"{site}/papers/attempt/**")
+    clock = page.locator("#exam-clock")
+    first = clock.inner_text()
+    page.wait_for_timeout(1500)
+    assert first != clock.inner_text() and "left" in clock.inner_text()
+    q134 = page.locator("#q134")
+    assert q134.locator("input").count() == 0 and "Withdrawn by the Commission" in q134.inner_text()
+    s = PaperAttempt.objects.get(attempt__user=learner)
+    for n in (1, 2, 3, 4, 5):                       # all five are counted questions, answered right
+        with page.expect_response(lambda r: r.url.endswith("/answer")):
+            page.locator(f'fieldset[data-n="{n}"] input[value="{_paper_tok(s, n)}"]').check()
+    assert page.locator("#exam-answered").inner_text() == "5"
+    assert page.locator('.exam-grid a.is-answered').count() == 5
+    page.once("dialog", lambda d: d.accept())
+    page.get_by_role("button", name="Submit the paper").click()
+    page.wait_for_url(f"{site}/papers/attempt/{s.attempt_id}/review")
+    assert "5.00 of 140.00" in page.locator(".tr-summary").inner_text()
+    assert "not counted" in page.locator("#q134").inner_text()
+
+
+def test_practise_the_ugc_2026_paper_and_come_back_to_the_same_place(page, site, learner):
+    from apps.papers.models import PaperAttempt
+
+    sign_in_to(page, site, learner.email, "papers/ugc-net-june-2026/")
+    assert "No timer" in page.content()
+    page.get_by_role("button", name="Practise").click()
+    page.wait_for_url(f"{site}/papers/attempt/**")
+    s = PaperAttempt.objects.get(attempt__user=learner)
+    page.locator(f'input[value="{_paper_tok(s, 1, correct=False)}"]').check()
+    page.get_by_role("button", name="Check my answer").click()
+    assert "Not quite." in page.locator(".practice-verdict").inner_text()
+    assert page.locator(".tq-options li.is-key").count() == 1
+    page.get_by_role("link", name="Next →").click()
+    page.get_by_role("button", name="Show the solution").click()
+    assert "The answer:" in page.locator(".practice-verdict").inner_text()
+    page.goto(f"{site}/papers/ugc-net-june-2026/")
+    page.get_by_role("button", name="Carry on practising").click()
+    assert page.locator("h1").inner_text().startswith("Q2")
+
+
+def test_the_clock_submits_the_paper_when_it_runs_out(page, site, learner):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from apps.papers.models import PaperAttempt
+
+    sign_in_to(page, site, learner.email, "papers/appsc-aso-2022-paper-ii/")
+    page.get_by_role("button", name="Sit the paper").click()
+    page.wait_for_url(f"{site}/papers/attempt/**")
+    s = PaperAttempt.objects.get(attempt__user=learner)
+    PaperAttempt.objects.filter(pk=s.pk).update(deadline=timezone.now() + timedelta(seconds=3))
+    page.reload()
+    page.wait_for_url(f"{site}/papers/attempt/{s.attempt_id}/review", timeout=15000)
+    s.attempt.refresh_from_db()
+    assert s.attempt.submitted_at is not None

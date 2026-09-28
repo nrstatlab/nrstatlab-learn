@@ -13,7 +13,7 @@ ALLOWED = {
     "accounts": set(),
     "study": {"accounts"},
     "examinations": {"study", "progress", "accounts"},
-    "papers": {"assessments", "examinations", "accounts"},
+    "papers": {"assessments", "examinations", "accounts", "progress"},
     "assessments": {"study", "progress", "accounts"},
     "progress": {"study", "accounts"},
 }

@@ -1,10 +1,13 @@
 """setup_local prepares a computer for the offline check (docs/LOCAL-CHECK.md)."""
+from decimal import Decimal
+
 import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
 from apps.assessments.models import Attempt
 from apps.core.management.commands import setup_local
+from apps.progress import services as progress
 from apps.progress.models import UnitProgress
 
 pytestmark = pytest.mark.django_db
@@ -33,8 +36,18 @@ def test_the_learner_with_progress_has_a_pass_and_a_fail(settings, django_user_m
     user = django_user_model.objects.get(email=setup_local.PROGRESSED[0])
     statuses = dict(UnitProgress.objects.filter(user=user).values_list("unit__legacy_path", "status"))
     assert statuses == {setup_local.STUDIED[0]: "studied", setup_local.STUDIED[1]: "passed"}
-    scores = sorted(Attempt.objects.filter(user=user).values_list("score", flat=True))
+    scores = sorted(Attempt.objects.filter(user=user).exclude(kind=Attempt.PAPER).values_list("score", flat=True))
     assert scores == [3, 10]
+
+
+def test_the_learner_with_progress_has_sat_a_paper(settings, django_user_model):
+    settings.DEBUG = True
+    call_command("setup_local", "--skip-import")
+    user = django_user_model.objects.get(email=setup_local.PROGRESSED[0])
+    sat = Attempt.objects.get(user=user, kind=Attempt.PAPER)
+    # 90 right, 30 wrong at -0.33, of the 140 questions that count (docs/LOCAL-CHECK.md, 4.8)
+    assert (sat.mode, sat.score, sat.max_score) == ("exam", Decimal("80.10"), Decimal("140.00"))
+    assert [p["score"] for p in progress.recent_papers(user)] == ["80.10"]
 
 
 def test_the_demo_learners_can_sign_in(settings, client):
