@@ -55,3 +55,6 @@ once). They run last, because a live server empties the test database after each
   ten-question test on each unit that has enough checked questions. `docs/PHASE-3-REPORT.md`.
 - **Phase 4, old papers:** the three solved papers, practised one question at a time or sat as an
   exam under each paper's own recorded rules, with a review by section. `docs/PHASE-4-REPORT.md`.
+- **Phase 5, readiness:** each exam's syllabus map, line by line, with the units that teach each line;
+  readiness from the units passed, the most reachable today, and the next units to study.
+  `docs/PHASE-5-REPORT.md`.

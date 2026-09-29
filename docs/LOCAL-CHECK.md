@@ -39,7 +39,7 @@ docker compose up --build
 |---|---|
 | `owner@localhost` | You, as staff: the admin at http://localhost:8000/staff/ |
 | `new.learner@localhost` (Meera) | A learner who has done nothing yet |
-| `progress.learner@localhost` (Arjun) | A learner with progress: Descriptive Statistics Unit 3 studied and its test failed (30%); UGC NET Unit 7 studied and its test passed (100%); the APPSC 2025 paper sat as an exam (80.10 of 140) |
+| `progress.learner@localhost` (Arjun) | A learner with progress: Descriptive Statistics Unit 3 studied and its test failed (30%); UGC NET Unit 7 studied and its test passed (100%); the APPSC 2025 paper sat as an exam (80.10 of 140); preparing for UGC NET |
 
 **Emails.** Sign-up and password reset emails are not sent anywhere. They are printed in the window
 where `docker compose up` runs. If you started it with `-d`, run `docker compose logs web` to see
@@ -195,6 +195,39 @@ own rules. Sign in as `new.learner@localhost` unless a check says otherwise.
   pages are readable and nothing needs scrolling sideways, except the section table, which scrolls
   within itself.
 
+### Phase 5: readiness for your exam
+
+Readiness is worked out from each exam's syllabus map on the site. Every line of the map is shown with
+the units that teach it, and only units you have **passed** (by passing their unit test) count. Only
+19 units have a test so far, so each exam also shows the most you can reach today.
+
+- [ ] **5.1 The box on an exam's map.** Signed out, open the UGC NET map
+  (http://localhost:8000/exams/ugc-net/index.html). Under the bar, a box says "How ready are you?"
+  with **Sign in to see your readiness**. The maps of CSIR NET, ASRB NET, ISS (and its four paper
+  pages) and APPSC (and its two post pages) have the same box.
+- [ ] **5.2 The figure.** Sign in as `progress.learner@localhost`. The box on the UGC NET map now reads
+  "Your readiness for UGC NET Statistics: 4.1%". **See what to study next** opens the readiness page:
+  **4.1% ready**, and "12 of the 72 units this exam needs have a unit test yet, so today the most you
+  can reach is **50.8%**".
+- [ ] **5.3 Line by line.** Each syllabus line of the map is listed with its units, a small bar, and
+  each unit's status: **passed**, **marked done** or **not started**, "in depth" or "at exam level", and
+  "no test yet" where there is none. Under Unit VII: Time Series, UGC NET Unit VII shows **passed**.
+- [ ] **5.4 What is not counted.** On the ISS page (http://localhost:8000/readiness/iss/), two lists at
+  the end: "Taught here on pages with nothing to mark (9)" and "Not taught on this site yet (26)". The
+  page says neither is in the figure.
+- [ ] **5.5 Next to study.** Three units, each with the number of syllabus lines it teaches and its next
+  step: "Study it, then take its test", "Take its test", or "Study it; its test is not written yet".
+- [ ] **5.6 A passed test raises the figure.** Sign in as `new.learner@localhost`. CSIR NET
+  (http://localhost:8000/readiness/csir-net/) reads **0% ready**. Mark UGC NET Unit II done and pass
+  its test (7 of 10 or better). CSIR NET now reads **25.6% ready**: that unit alone teaches 10 of the
+  39 CSIR NET lines that are counted.
+- [ ] **5.7 Your exam on the dashboard.** On a readiness page press **Make this my exam**. The
+  dashboard (**My progress**) shows a "Your exam" card with the figure and the next unit.
+  `progress.learner@localhost` already has UGC NET as their exam. **Stop preparing for it** removes
+  the card's exam.
+- [ ] **5.8 In the dark and on a phone.** In dark mode and in a phone-sized window, the readiness pages
+  and the box are readable and nothing needs scrolling sideways.
+
 ### Last of all
 
 - [ ] **L.1 Five wrong passwords lock sign-in.** Do this one last: it locks the account for a while.
@@ -207,7 +240,6 @@ own rules. Sign in as `new.learner@localhost` unless a check says otherwise.
 
 ## 3. What is not here yet
 
-- **Phase 5:** readiness for your exam.
 - **Phase 6:** the quality loop, item statistics and review.
 - **Phase 7:** launch: security, hosting and the domain.
 - **Google sign-in** appears once its client is set up, before staging.
