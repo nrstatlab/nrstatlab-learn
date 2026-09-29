@@ -171,6 +171,11 @@ def record_test(user, page_id, *, score, passed, attempt_id):
     return row.status
 
 
+def counts():
+    """What the progress app holds, for comparing a database before and after a restore."""
+    return {"unit progress": UP.objects.count(), "activity events": ActivityEvent.objects.count()}
+
+
 def recent_tests(user, n=5):
     """The last n unit tests submitted: [{title, path, score, passed, attempt, at}]."""
     out = []

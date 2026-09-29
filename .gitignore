@@ -15,3 +15,5 @@ staticfiles/
 var/
 media/
 node_modules/
+# database backups made on this computer (docs/LOCAL-CHECK.md, 7.2)
+backups/

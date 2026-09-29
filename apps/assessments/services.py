@@ -26,6 +26,16 @@ def questions_by_uid(uids):
     return {q.uid: q for q in Question.objects.filter(uid__in=list(uids))}
 
 
+def counts():
+    """What the assessments app holds, for comparing a database before and after a restore."""
+    from .models import Attempt, ItemStats, QuestionEvent, Response
+
+    return {"questions": Question.objects.count(), "attempts": Attempt.objects.count(),
+            "submitted attempts": Attempt.objects.filter(submitted_at__isnull=False).count(),
+            "responses": Response.objects.count(), "question events": QuestionEvent.objects.count(),
+            "item statistics": ItemStats.objects.count()}
+
+
 def tested_units(paths):
     """The page ids, among these, of units whose test is open to take: the unit has a
     test and enough published questions for it (engine.test_for_unit, in bulk)."""

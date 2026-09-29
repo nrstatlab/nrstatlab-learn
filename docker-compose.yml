@@ -11,14 +11,15 @@ services:
       POSTGRES_DB: nrstatlab
       POSTGRES_USER: nrstatlab
       POSTGRES_PASSWORD: dev-only
-    volumes: [pgdata:/var/lib/postgresql/data]
+    # ./backups on this computer is /backups in the database container (docs/LOCAL-CHECK.md, 7.2)
+    volumes: [pgdata:/var/lib/postgresql/data, "./backups:/backups"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nrstatlab"]
       interval: 5s
       retries: 10
   web:
     build: .
-    # Database, content, question bank and the three demo accounts, then the server.
+    # Database, content, question bank and the four demo accounts, then the server.
     command: sh -c "python manage.py setup_local && python manage.py runserver 0.0.0.0:8000"
     env_file:
       - path: .env
