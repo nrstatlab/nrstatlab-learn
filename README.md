@@ -58,3 +58,6 @@ once). They run last, because a live server empties the test database after each
 - **Phase 5, readiness:** each exam's syllabus map, line by line, with the units that teach each line;
   readiness from the units passed, the most reachable today, and the next units to study.
   `docs/PHASE-5-REPORT.md`.
+- **Phase 6, the quality loop:** nightly item statistics (`manage.py item_stats`: p and r_pb, with
+  questions that behave badly flagged for review), and the reviewers' queue in the admin, with the
+  two-person rule and a history of every change. `docs/PHASE-6-REPORT.md`.

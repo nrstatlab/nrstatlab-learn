@@ -28,16 +28,17 @@ docker compose up --build
 ```
 
 - **The first start takes a few minutes.** It builds the app, then prepares the database: all 693
-  pages of the site, the 950 questions and three demo accounts.
+  pages of the site, the 950 questions and four demo accounts.
 - **When the window shows `Ready. Open http://localhost:8000`,** open
   **http://localhost:8000** in your browser.
 - **Keep that window open.** It is also where emails appear (below).
 
-**The demo accounts.** The password for all three is `local-check-only`.
+**The demo accounts.** The password for all four is `local-check-only`.
 
 | Account | What it is for |
 |---|---|
-| `owner@localhost` | You, as staff: the admin at http://localhost:8000/staff/ |
+| `owner@localhost` | You, as staff and a reviewer: the admin at http://localhost:8000/staff/ |
+| `reviewer@localhost` (Kavya) | A second reviewer (staff, not an administrator), for the two-person rule |
 | `new.learner@localhost` (Meera) | A learner who has done nothing yet |
 | `progress.learner@localhost` (Arjun) | A learner with progress: Descriptive Statistics Unit 3 studied and its test failed (30%); UGC NET Unit 7 studied and its test passed (100%); the APPSC 2025 paper sat as an exam (80.10 of 140); preparing for UGC NET |
 
@@ -137,7 +138,8 @@ A tip: use a private (incognito) window as a second browser, or as a second lear
   `owner@localhost`), open **Questions** and filter by status **flagged**. You see 37 questions,
   each with its reason. They are the ones whose key is in doubt, and none of them appears in any
   test.
-- [ ] **3.9 You decide.** Open one of those questions, change its status to **published**, and save.
+- [ ] **3.9 You decide.** Since Phase 6, a question is published only from **Questions in the review
+  queue** (in the admin, under Assessments). Open one of those questions there and press **Approve and publish**.
   It can now be drawn in its unit's test.
 
   For example, UGC NET Unit 5 Q50, once you have settled its key. The solved-paper flags are listed
@@ -228,6 +230,47 @@ the units that teach it, and only units you have **passed** (by passing their un
 - [ ] **5.8 In the dark and on a phone.** In dark mode and in a phone-sized window, the readiness pages
   and the box are readable and nothing needs scrolling sideways.
 
+### Phase 6: the quality loop
+
+Each night, the live platform will work out two figures for every question with 30 or more answers,
+from unit tests and exam-mode papers:
+- **p**, the share who get it right;
+- **r_pb**, whether those who get it right also do better on the rest of the test.
+
+A question that looks wrong is taken out of tests and put in front of the reviewers. On this computer
+you run it yourself. The demo data holds 40 anonymous sittings of the UGC NET Unit I test, with one
+question planted to behave badly.
+
+- [ ] **6.1 Run the statistics.** In a second terminal, in the `nrstatlab-learn` folder, run
+  `docker compose exec web python manage.py item_stats`. It reports 10 questions with 30 or more
+  responses, and 1 flagged for review: `ugc-mcq-u01-q10`, "r_pb is negative (−0.888): those who got
+  it right did worse on the rest". Below that, the same terminal shows the email sent to both
+  reviewers (offline, emails are printed where the command runs).
+- [ ] **6.2 The review queue.** In the admin (http://localhost:8000/staff/, as `owner@localhost`),
+  open **Questions in the review queue**. It lists only draft and flagged questions, with why each is
+  there and its n, p and r_pb. `ugc-mcq-u01-q10` is among them with n 40, p 0.500 and r_pb −0.888.
+- [ ] **6.3 Side by side.** Open it. On the left, the question as the learner sees it, maths drawn by
+  MathJax. On the right:
+  - the key and the working;
+  - the recompute log;
+  - the item statistics;
+  - the unit it is taught in.
+
+  Below, its history: imported, then flagged by statistics.
+- [ ] **6.4 Approve.** Press **Approve and publish**. It leaves the queue, is published again, and
+  its history now records that you approved it.
+- [ ] **6.5 No one approves their own question.** Open `local-demo-draft-001`, a draft written by
+  `owner@localhost`. It says "You wrote this question", and **Approve and publish** is off. Sign in to
+  the admin as `reviewer@localhost` in a private window and approve it there: it is published.
+- [ ] **6.6 Send back needs a note.** Open another flagged question and press **Send back** with the
+  note empty: it asks for a note. Write one and send it back. The question becomes a draft, and the
+  queue shows "Sent back:" with your note.
+- [ ] **6.7 Approved means approved.** Run `item_stats` again. `ugc-mcq-u01-q10` is not flagged
+  again: it would be only after 30 more responses.
+- [ ] **6.8 Publishing only through the queue.** In the admin's plain **Questions** list, open a
+  flagged question, set its status to **published** and save. It is refused, and points you to the
+  review queue.
+
 ### Last of all
 
 - [ ] **L.1 Five wrong passwords lock sign-in.** Do this one last: it locks the account for a while.
@@ -240,7 +283,6 @@ the units that teach it, and only units you have **passed** (by passing their un
 
 ## 3. What is not here yet
 
-- **Phase 6:** the quality loop, item statistics and review.
 - **Phase 7:** launch: security, hosting and the domain.
 - **Google sign-in** appears once its client is set up, before staging.
 
