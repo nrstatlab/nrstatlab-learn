@@ -26,6 +26,14 @@ def find(legacy_path):
             or Page.objects.filter(legacy_path=legacy_path, published=True).first())
 
 
+def titles(paths):
+    """{legacy path: page title} for the stored pages among these paths."""
+    paths = list(paths)
+    out = dict(Page.objects.filter(legacy_path__in=paths).values_list("legacy_path", "title"))
+    out.update(Unit.objects.filter(legacy_path__in=paths).values_list("legacy_path", "title"))
+    return out
+
+
 def exists(legacy_path):
     return (Unit.objects.filter(legacy_path=legacy_path).exists()
             or Page.objects.filter(legacy_path=legacy_path).exists())
@@ -92,7 +100,7 @@ def store_site(*, programmes, courses, pages, markable, indexed):
         if old is None:
             model.objects.create(legacy_path=rel, **fields)
             counts["created"] += 1
-        elif (old.content_hash != fields["content_hash"] or old.indexed != fields["indexed"]
+        elif (old.content_hash != fields["content_hash"] or old.indexed != fields["indexed"] or old.title != fields["title"]
               or old.course_id != (fields["course"].pk if fields["course"] else None)):
             for k, v in fields.items():
                 setattr(old, k, v)

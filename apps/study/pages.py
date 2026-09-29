@@ -1,6 +1,7 @@
 """A page of the static site, split into the parts its generators mark and put back
 together exactly. Pure functions: no database, no settings."""
 import hashlib
+import html
 import re
 
 NAV_OPEN = re.compile(r"<!-- site-nav(?::[^>]*)? -->")
@@ -50,7 +51,8 @@ def page_fields(text: str) -> dict:
     title = TITLE_RE.search(head)
     desc = DESC_RE.search(head)
     parts.update(
-        title=re.sub(r"\s+", " ", title.group(1)).strip() if title else "",
+        # stored as text, so a page title with "&amp;" reads "&" wherever the app shows it
+        title=html.unescape(re.sub(r"\s+", " ", title.group(1)).strip()) if title else "",
         description=desc.group(1) if desc else "",
         has_math="mathjax" in head.lower(),
         content_hash=hashlib.sha256(text.encode()).hexdigest(),
