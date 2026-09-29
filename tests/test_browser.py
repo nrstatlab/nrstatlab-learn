@@ -327,3 +327,57 @@ def test_readiness_from_an_exams_map_rises_with_a_passed_test(page, site, learne
     page.goto(f"{site}/me/")
     card = page.locator(".ready-card")
     assert "CSIR NET Mathematical Sciences: 25.6% ready" in card.inner_text()
+
+
+@pytest.mark.parametrize("width", [390, 1280])
+def test_fail_a_unit_test_retake_it_and_pass(browser, site, learner, width):
+    """BUILD-GUIDE Step 15, at a phone's width and a desktop's."""
+    from apps.assessments.models import Attempt
+    from apps.progress import services as progress
+
+    from .test_unit_tests import correct_answers, wrong_token
+
+    progress.mark_studied(learner, UGC7)
+    page = browser.new_context(viewport={"width": width, "height": 900}).new_page()
+    sign_in_to(page, site, learner.email, UGC7)
+    page.locator(".learn-test a").click()
+    page.get_by_role("button", name="Start the test").click()
+    page.wait_for_url(f"{site}/test/attempt/**")
+    first = Attempt.objects.get(user=learner)
+    for n in range(1, 11):
+        with page.expect_response(lambda r: r.url.endswith("/answer")):
+            page.locator(f'fieldset.tq[data-n="{n}"] input[value="{wrong_token(first, n)}"]').check()
+    page.get_by_role("button", name="Submit the test").click()
+    page.wait_for_url(f"{site}/test/attempt/{first.pk}/result")
+    summary = page.locator(".tr-summary").inner_text()
+    assert "0 of 10" in summary and "Passed" not in summary
+    assert page.evaluate("() => document.documentElement.scrollWidth <= innerWidth")
+    page.get_by_role("button", name="Take the test again").click()
+    page.wait_for_url(f"{site}/test/attempt/**")
+    second = Attempt.objects.filter(user=learner, submitted_at__isnull=True).get()
+    for n, token in correct_answers(second).items():
+        with page.expect_response(lambda r: r.url.endswith("/answer")):
+            page.locator(f'fieldset.tq[data-n="{n}"] input[value="{token}"]').check()
+    page.get_by_role("button", name="Submit the test").click()
+    page.wait_for_url(f"{site}/test/attempt/{second.pk}/result")
+    assert "10 of 10" in page.locator(".tr-summary").inner_text()
+    page.goto(f"{site}/{UGC7}")
+    assert "Passed, best 100%" in page.locator(".learn-test").inner_text()
+
+
+@pytest.mark.parametrize("width", [390, 1280])
+def test_download_my_data_then_delete_the_account(browser, site, learner, width, django_user_model):
+    """BUILD-GUIDE Step 15: export, then delete."""
+    page = browser.new_context(viewport={"width": width, "height": 900}, accept_downloads=True).new_page()
+    sign_in_to(page, site, learner.email, "me/")
+    with page.expect_download() as dl:
+        page.get_by_role("link", name="Download my data (JSON)").click()
+    data = json.loads(open(dl.value.path()).read())
+    assert learner.email in json.dumps(data)
+    page.goto(f"{site}/me/delete")
+    page.fill("input[name=password]", PASSWORD)
+    page.get_by_role("button", name="Delete my account").click()
+    page.wait_for_load_state()
+    assert not django_user_model.objects.filter(email=learner.email).exists()
+    page.goto(f"{site}/me/")
+    assert "/accounts/login/" in page.url
