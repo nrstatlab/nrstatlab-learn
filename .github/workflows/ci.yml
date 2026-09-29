@@ -48,3 +48,7 @@ jobs:
           python manage.py import_questions --dry-run
       - name: Tests (pages, redirects, site files, boundaries, accounts, progress, question bank, unit tests, browser)
         run: pytest --cov --cov-report=term-missing:skip-covered
+      - name: Coverage of the scoring and progress apps is 90% or more (BUILD-GUIDE Step 15)
+        run: coverage report --include="apps/assessments/*,apps/progress/*" --fail-under=90
+      - name: No known vulnerabilities in the runtime dependencies
+        run: pip-audit -r requirements.txt

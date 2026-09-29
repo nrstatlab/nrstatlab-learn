@@ -19,3 +19,15 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
+
+# Logs go to the console, where the host collects them. Django logs each request's method, path
+# and status, never its body, so answers, passwords and tokens never reach a log.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {"plain": {"format": "%(asctime)s %(levelname)s %(name)s %(message)s"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "plain"}},
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {"django": {"handlers": ["console"], "level": "INFO", "propagate": False}},
+}
+
