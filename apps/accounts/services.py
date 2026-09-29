@@ -40,13 +40,14 @@ def mark_import_done(user):
     Profile.objects.filter(pk=profile_for(user).pk).update(browser_import_done=True)
 
 
-def create_verified_account(email, password, display_name, staff=False):
+def create_verified_account(email, password, display_name, staff=False, superuser=None):
     """An account whose email is already verified, for local demonstration data
     (setup_local). Real accounts are made by signing up."""
     from allauth.account.models import EmailAddress
     from django.contrib.auth import get_user_model
 
-    user = get_user_model().objects.create_user(email, password, is_staff=staff, is_superuser=staff)
+    user = get_user_model().objects.create_user(email, password, is_staff=staff,
+                                                 is_superuser=staff if superuser is None else superuser)
     EmailAddress.objects.create(user=user, email=email, verified=True, primary=True)
     Profile.objects.create(user=user, display_name=display_name, age_confirmed=True)
     return user

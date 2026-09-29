@@ -6,7 +6,7 @@ from django.db import transaction
 
 from apps.study import services as study
 
-from .models import Choice, Question, QuestionUnit, UnitTest
+from .models import Choice, Question, QuestionEvent, QuestionUnit, UnitTest
 
 
 class BankError(Exception):
@@ -69,6 +69,7 @@ def store_questions(items, *, prefix):
         raise BankError(f"questions link to pages that are not units: {missing[:5]}")
 
     counts = dict.fromkeys(("created", "updated", "unchanged", "retired"), 0)
+    events = []
     existing = {q.uid: q for q in Question.objects.filter(uid__startswith=prefix)}
     for item in items:
         h = _hash(item)
@@ -80,7 +81,13 @@ def store_questions(items, *, prefix):
         if q is None:
             q = Question.objects.create(uid=item["uid"], status=status, source_hash=h, **fields)
             counts["created"] += 1
+            events.append(QuestionEvent(question=q, action=QuestionEvent.IMPORTED, to_status=status,
+                                        note=fields["flag_reason"]))
         elif q.source_hash != h or q.status == Question.RETIRED:
+            events.append(QuestionEvent(question=q, action=QuestionEvent.SOURCE_CHANGED, from_status=q.status,
+                                        to_status=status, note=fields["flag_reason"],
+                                        changes={k: [str(getattr(q, k)), str(v)] for k, v in fields.items()
+                                                 if getattr(q, k) != v and k not in ("stem_html", "solution_html")}))
             for k, v in fields.items():
                 setattr(q, k, v)
             q.status, q.source_hash = status, h
@@ -97,9 +104,12 @@ def store_questions(items, *, prefix):
         _sync_units(q, [units[p] for p in item.get("units", [])])
     for gone in existing.values():
         if gone.status != Question.RETIRED:
+            events.append(QuestionEvent(question=gone, action=QuestionEvent.RETIRED, from_status=gone.status,
+                                        to_status=Question.RETIRED, note="No longer in the source."))
             gone.status = Question.RETIRED
             gone.save(update_fields=["status", "updated_at"])
             counts["retired"] += 1
+    QuestionEvent.objects.bulk_create(events)
     for unit in units.values():
         UnitTest.objects.get_or_create(unit=unit)
     return counts

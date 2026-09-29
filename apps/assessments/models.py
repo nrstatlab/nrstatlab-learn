@@ -124,3 +124,40 @@ class ItemStats(models.Model):
     difficulty = models.FloatField(null=True)
     point_biserial = models.FloatField(null=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # The n at which a reviewer last approved this question after the statistics flagged
+    # it. The nightly job flags it again only on 30 more responses (BUILD-GUIDE Step 13).
+    cleared_at_n = models.PositiveIntegerField(null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = "item statistics"
+
+
+class QuestionEvent(models.Model):
+    """The history of a question: every change of status or content, who made it and
+    why (BUILD-GUIDE Step 13, "every change is kept in history")."""
+
+    IMPORTED, SOURCE_CHANGED, RETIRED = "imported", "source changed", "retired"
+    STATS_FLAGGED, APPROVED, SENT_BACK, EDITED = "flagged by statistics", "approved", "sent back", "edited"
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="events")
+    at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    action = models.CharField(max_length=30)
+    from_status = models.CharField(max_length=10, blank=True)
+    to_status = models.CharField(max_length=10, blank=True)
+    note = models.TextField(blank=True)
+    changes = models.JSONField(default=dict, blank=True)
+
+    class Meta:
+        ordering = ["question", "at", "pk"]
+
+    def __str__(self):
+        return f"{self.question.uid}: {self.action}"
+
+
+class ReviewQuestion(Question):
+    """The reviewers' queue in the admin: draft and flagged questions."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "question in the review queue"
+        verbose_name_plural = "questions in the review queue"

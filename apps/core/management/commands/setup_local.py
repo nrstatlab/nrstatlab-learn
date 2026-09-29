@@ -1,6 +1,6 @@
 """Prepare a computer to try the application offline (docs/LOCAL-CHECK.md).
 
-Runs the migrations and both imports, then adds three local-only accounts, once.
+Runs the migrations and both imports, then adds four local-only accounts, once.
 It refuses to run unless DEBUG is on, so it can never touch a production database."""
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -17,6 +17,8 @@ PASSWORD = "local-check-only"
 OWNER = ("owner@localhost", "Owner")
 NEW = ("new.learner@localhost", "Meera")
 PROGRESSED = ("progress.learner@localhost", "Arjun")
+REVIEWER = ("reviewer@localhost", "Kavya")
+DEMO_STATS_UNIT = "exams/ugc-net/unit1.html"   # 40 anonymous sittings, for item_stats (Phase 6)
 STUDIED = ["statistics/descriptive-statistics/unit3.html", "exams/ugc-net/unit7.html"]
 
 
@@ -35,8 +37,16 @@ class Command(BaseCommand):
             call_command("import_site", stdout=self.stdout)
             call_command("import_questions", stdout=self.stdout)
         made = []
-        if self._account(*OWNER, staff=True):
+        owner = self._account(*OWNER, staff=True)
+        if owner:
             made.append(OWNER[0])
+            assessments.add_to_reviewers(owner)
+            assessments.demo_draft(owner)                         # the owner may not approve it
+            assessments.demo_item_data(DEMO_STATS_UNIT)
+        reviewer = self._account(*REVIEWER, staff=True, superuser=False)
+        if reviewer:
+            made.append(REVIEWER[0])
+            assessments.add_to_reviewers(reviewer)
         if self._account(*NEW):
             made.append(NEW[0])
         user = self._account(*PROGRESSED)
@@ -53,12 +63,13 @@ class Command(BaseCommand):
             f"  owner (admin at /staff/):   {OWNER[0]}\n"
             f"  a new learner:              {NEW[0]}\n"
             f"  a learner with progress:    {PROGRESSED[0]}\n"
-            f"  password for all three:     {PASSWORD}\n"
+            f"  a second reviewer (staff):  {REVIEWER[0]}\n"
+            f"  password for all four:      {PASSWORD}\n"
             "Emails (sign-up, password reset) are printed here, in this window.\n"
             + (f"(created now: {', '.join(made)})" if made else "(the accounts were already there)")))
 
-    def _account(self, email, name, staff=False):
+    def _account(self, email, name, staff=False, superuser=None):
         """Create the account if it is missing; return it only when it is new."""
         if get_user_model().objects.filter(email=email).exists():
             return None
-        return accounts.create_verified_account(email, PASSWORD, name, staff=staff)
+        return accounts.create_verified_account(email, PASSWORD, name, staff=staff, superuser=superuser)

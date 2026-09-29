@@ -23,6 +23,7 @@ Unit pages were searched for practice sets with answers; there are none yet.
 """
 from __future__ import annotations
 
+import html
 import json
 import re
 import sys
@@ -194,9 +195,10 @@ def read_appsc(root):
             options = [gen.option_html(o, images, maths) for o in q["options"]]
             unit_path = topics[topic][1]
             if key is None:
-                reason = "Withdrawn by the Commission: " + notes[n]
+                reason = "Withdrawn by the Commission: " + html.unescape(notes[n])
             elif flag:
-                reason = "The solved page notes: " + re.sub(r"<[^>]+>", "", flag)
+                # the note is HTML on the solved page; the reason is shown as text
+                reason = "The solved page notes: " + html.unescape(re.sub(r"<[^>]+>", "", flag))
             else:
                 reason = ""
             items.append({

@@ -1,0 +1,73 @@
+{% extends "admin/base_site.html" %}
+{% block extrahead %}{{ block.super }}{% include "includes/mathjax.html" %}{% endblock %}
+{% block extrastyle %}{{ block.super }}
+<style>
+  .rv-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) { .rv-cols { grid-template-columns: 1fr; } }
+  .rv-box { border: 1px solid var(--hairline-color); border-radius: 6px; padding: 12px 16px; }
+  .rv-box h2 { margin-top: 0; }
+  .rv-opts { list-style: none; padding-left: 0; }
+  .rv-opts li { margin: 4px 0; list-style: none; }
+  .rv-key { font-weight: 700; }
+  .rv-log { white-space: pre-wrap; font-size: 12px; }
+  .rv-reason { background: var(--message-warning-bg); padding: 8px 12px; border-radius: 4px; }
+  .rv-actions { margin-top: 16px; display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
+  .rv-actions form { border: 1px solid var(--hairline-color); border-radius: 6px; padding: 12px 16px; max-width: 100%; box-sizing: border-box; }
+  .rv-actions textarea { width: 360px; max-width: 100%; box-sizing: border-box; }
+</style>{% endblock %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Home</a> ›
+  <a href="{% url 'admin:assessments_reviewquestion_changelist' %}">Questions in the review queue</a> › {{ q.uid }}</div>{% endblock %}
+{% block content_title %}<h1>Review {{ q.uid }} <small>({{ q.get_status_display }}, {{ q.get_qtype_display }})</small></h1>{% endblock %}
+{% block content %}
+{% if q.flag_reason %}<p class="rv-reason"><b>Why it is here:</b> {{ q.flag_reason }}</p>{% endif %}
+<p>Source: {{ q.source }}{% if q.source_ref %} · {{ q.source_ref }}{% endif %} ·
+  author: {{ q.author|default:"imported from the site (no author)" }} ·
+  <a href="{{ full_edit }}">edit the question</a></p>
+
+<div class="rv-cols">
+  <section class="rv-box" aria-labelledby="rv-learner">
+    <h2 id="rv-learner">As the learner sees it</h2>
+    <div class="rv-stem">{{ q.stem_html|safe }}</div>
+    {% if options %}<ul class="rv-opts">{% for c in options %}<li><b>{{ c.label }}</b> {{ c.text_html|safe }}</li>{% endfor %}</ul>{% endif %}
+    {% if left %}<table><tr><th>List I</th><th>List II</th></tr>
+      {% for row in left %}<tr><td><b>{{ row.label }}</b> {{ row.text_html|safe }}</td><td></td></tr>{% endfor %}
+      {% for row in right %}<tr><td></td><td><b>{{ row.label }}</b> {{ row.text_html|safe }}</td></tr>{% endfor %}</table>{% endif %}
+    {% if q.qtype == "numeric" %}<p><i>A number is typed in.</i></p>{% endif %}
+  </section>
+  <section class="rv-box" aria-labelledby="rv-key">
+    <h2 id="rv-key">The key and the working</h2>
+    <p class="rv-key">Key: {% if key %}{{ key|join:", " }}{% else %}{{ q.answer_text|default:"none" }}{% endif %}{% if q.tolerance is not None %} (± {{ q.tolerance }}){% endif %}</p>
+    <div>{{ q.solution_html|safe|default:"<i>No working recorded.</i>" }}</div>
+    <h3>Recompute log</h3>
+    <div class="rv-log">{{ q.recompute_log|default:"None recorded." }}</div>
+    <h3>Item statistics</h3>
+    {% if stats %}<p>n = {{ stats.n }} · p = {{ stats.difficulty|floatformat:3 }} · r_pb = {% if stats.point_biserial is not None %}{{ stats.point_biserial|floatformat:3 }}{% else %}not defined{% endif %}{% if stats.cleared_at_n %} · last approved at n = {{ stats.cleared_at_n }}{% endif %}</p>
+    {% else %}<p>Fewer than 30 responses yet.</p>{% endif %}
+    <h3>Taught in</h3>
+    {% if units %}<ul>{% for title, path in units %}<li><a href="/{{ path }}">{{ title }}</a></li>{% endfor %}</ul>{% else %}<p>No unit.</p>{% endif %}
+  </section>
+</div>
+
+<div class="rv-actions">
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="approve">
+    <p><label for="approve-note">Note (optional)</label><br><textarea id="approve-note" name="note" rows="2"></textarea></p>
+    {% if own %}<p><b>You wrote this question</b>, so another reviewer must approve it.</p>
+    <input type="submit" value="Approve and publish" disabled>
+    {% else %}<input type="submit" class="default" value="Approve and publish">{% endif %}
+  </form>
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="action" value="send_back">
+    <p><label for="back-note">What needs changing (required)</label><br><textarea id="back-note" name="note" rows="2" required></textarea></p>
+    <input type="submit" value="Send back">
+  </form>
+</div>
+
+<h2>History</h2>
+<table>
+  <tr><th>When</th><th>What</th><th>Who</th><th>Status</th><th>Note</th></tr>
+  {% for e in events %}<tr><td>{{ e.at|date:"j M Y, H:i" }}</td><td>{{ e.action }}</td><td>{{ e.user|default:"—" }}</td>
+    <td>{% if e.from_status %}{{ e.from_status }} → {% endif %}{{ e.to_status }}</td><td>{{ e.note }}{% if e.changes %} <small>{{ e.changes }}</small>{% endif %}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
