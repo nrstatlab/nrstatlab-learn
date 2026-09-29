@@ -13,7 +13,7 @@ Everything here runs on a computer only. Nothing is online until the owner signs
 | The same on real data | **Met.** CSIR NET with UGC NET Unit II and Theory of Probability Unit 1 passed gives **26.9%**, worked by hand from `csirmap.py` (below) |
 | Only passed units count (the owner's decision) | **Met.** A studied unit is shown and counts nothing; a test proves it, and a mutation that counts it is caught |
 | The readiness page | **Met.** The figure; how many of the exam's units have a test, and the most that can be reached today; every syllabus line with its units, their status and a bar; the lines taught only on pages with nothing to mark, and the lines not taught here, listed plainly; the next three units to study |
-| CI | CI_RESULT |
+| CI | **Green on GitHub.** Run #12 on `ae314ee` passed every step: lint, checks, migrations, both import dry runs (the syllabus included), and the full test suite with the browser tests |
 
 ## The arithmetic, as built
 
