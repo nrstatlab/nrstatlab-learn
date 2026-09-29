@@ -21,8 +21,13 @@ from django.utils.html import escape, json_script
 
 from apps.accounts import services as accounts
 from apps.assessments import services as assessments
+from apps.examinations import services as examinations
 from apps.papers import services as papers
 from apps.progress import services as progress
+
+from .syllabus import MAP_PAGES
+
+EXAM_OF_MAP_PAGE = {page: slug for slug, pages in MAP_PAGES.items() for page in pages}
 
 OPEN, CLOSE = "<!-- nrstat-learn -->", "<!-- /nrstat-learn -->"
 MARKED = re.compile(re.escape(OPEN) + ".*?" + re.escape(CLOSE), re.S)
@@ -56,6 +61,16 @@ def account_state(request, page_id=None):
                               "wrong": str(-r["wrong"]) if r["scheme_recorded"] and r["wrong"] else None}
             if not user.is_authenticated:
                 state["paper"]["sign_in"] = "/accounts/login/?next=" + quote(f"/papers/{paper.slug}/", safe="/")
+        slug = EXAM_OF_MAP_PAGE.get(page_id)
+        exam = examinations.exam_by_slug(slug) if slug else None
+        if exam:
+            url = f"/readiness/{exam.slug}/"
+            if user.is_authenticated:
+                s = examinations.summary(user, exam)
+                state["readiness"] = {"url": url, "name": exam.name, "percent": s["percent"], "ceiling": s["ceiling"]}
+            else:
+                state["readiness"] = {"url": url, "name": exam.name,
+                                      "sign_in": "/accounts/login/?next=" + quote(url, safe="/")}
         test = assessments.availability(user, page_id)
         if test["has_test"]:
             state["test"] = test

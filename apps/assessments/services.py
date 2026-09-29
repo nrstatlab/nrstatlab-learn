@@ -24,6 +24,20 @@ def questions_by_uid(uids):
     return {q.uid: q for q in Question.objects.filter(uid__in=list(uids))}
 
 
+def tested_units(paths):
+    """The page ids, among these, of units whose test is open to take: the unit has a
+    test and enough published questions for it (engine.test_for_unit, in bulk)."""
+    from django.db.models import Count, F, Q
+
+    from .models import UnitTest
+
+    return set(UnitTest.objects.filter(unit__legacy_path__in=list(paths))
+               .annotate(published=Count("unit__question_links__question", distinct=True,
+                                         filter=Q(unit__question_links__question__status=Question.PUBLISHED)))
+               .filter(published__gte=F("n_questions"))
+               .values_list("unit__legacy_path", flat=True))
+
+
 def sit_test(user, page_id, right):
     """Take the unit's test as a learner who gets `right` questions right, and submit it.
     For demonstration data (setup_local) only; learners sit tests through the pages.

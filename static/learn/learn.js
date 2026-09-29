@@ -124,6 +124,32 @@
   }
   whenReady(drawPaper);
 
+  // ---- an exam's syllabus map: the learner's readiness for that exam (same place)
+  function drawReadiness() {
+    var r = state.readiness;
+    if (!r || document.querySelector('.learn-ready')) return;
+    var box = el('div', 'learn-banner learn-ready');
+    box.setAttribute('role', 'region');
+    box.setAttribute('aria-label', 'Your readiness for this exam');
+    var p = el('p', null);
+    if (state.signed_in) {
+      p.appendChild(el('b', null, 'Your readiness for ' + r.name + ': ' + r.percent + '%. '));
+      p.appendChild(document.createTextNode('It counts the units you have passed; at most ' + r.ceiling +
+                                            '% can be reached today, as unit tests are still being added.'));
+    } else {
+      p.appendChild(el('b', null, 'How ready are you? '));
+      p.appendChild(document.createTextNode('Sign in to see your readiness for ' + r.name +
+                                            ', line by line of this map, and what to study next.'));
+    }
+    box.appendChild(p);
+    var go = el('a', 'learn-ready-go', state.signed_in ? 'See what to study next' : 'Sign in to see your readiness');
+    go.href = state.signed_in ? r.url : r.sign_in;
+    box.appendChild(go);
+    var nav = document.querySelector('nav.sitenav');
+    if (nav) nav.parentNode.insertBefore(box, nav.nextSibling);
+  }
+  whenReady(drawReadiness);
+
   if (!store) {                                   // storage blocked: the page as it is, plus the test
     whenReady(function () { drawTest(!!(state.done || {})[here]); });
     return;

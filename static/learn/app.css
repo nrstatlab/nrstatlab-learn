@@ -129,6 +129,21 @@ main.app .practice-jump input { width: 80px; font: inherit; padding: 6px 8px; bo
 .review-sections th, .review-sections td { padding: 4px 12px 4px 0; }
 .review-sections tbody th { font-weight: 400; }
 
+/* Readiness (Phase 5) */
+.ready-figure { font-size: 1.15rem; margin: 0; }
+.ready-figure b { font-size: 2rem; color: var(--nl-blue); }
+.ready-items, .ready-units { list-style: none; padding: 0; margin: 0; }
+.ready-item { padding: 10px 14px; margin-bottom: 10px; }
+main.app .ready-line { margin: 0 0 4px; }
+.ready-bar { height: 6px; margin: 6px 0; }
+.ready-units li { margin: 2px 0; line-height: 1.5; }
+.ready-status { display: inline-block; font-size: .82rem; font-weight: 600; padding: 0 8px; border-radius: 999px;
+  border: 1px solid #b9cadb; color: #3d4b5c; margin-left: 4px; }
+.ready-status.is-passed { border-color: #047857; color: #065f46; background: #ecfdf5; }
+.ready-status.is-studied { border-color: #1565a8; color: #0f4c81; background: #eef5fb; }
+.ready-next li { margin: 6px 0; }
+main.app h3 { font-size: 1.05rem; margin: 22px 0 8px; color: var(--nl-blue); }
+
 .app-foot-note { max-width: 760px; margin: 0 auto 10px; padding: 0 16px; box-sizing: border-box;
   font-size: .92rem; color: var(--nl-ink-soft); }
 
@@ -172,4 +187,8 @@ main.app .practice-jump input { width: 80px; font: inherit; padding: 6px 8px; bo
   .practice-verdict.is-wrong { color: #fca5a5; }
   .practice-answer { border-color: #2a3d5b; }
   main.app .practice-jump input { background: #172133; color: #c9d5ea; border-color: #3a5170; }
+  .ready-figure b, main.app h3 { color: #b1d2ef; }
+  .ready-status { border-color: #3a5170; color: #c9d5ea; background: none; }
+  .ready-status.is-passed { border-color: #34d399; color: #6ee7b7; background: #10271f; }
+  .ready-status.is-studied { border-color: #a8cfed; color: #a8cfed; background: #1c283b; }
 }

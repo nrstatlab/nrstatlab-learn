@@ -72,4 +72,5 @@ def dashboard(request):
         "streak": services.streak(user),
         "tests": services.recent_tests(user),
         "papers": services.recent_papers(user),
+        "cards": services.cards(user),
     })

@@ -23,6 +23,11 @@ class Command(BaseCommand):
             f"read: {len(src.courses)} courses, {len(src.markable)} markable units, "
             f"{len(src.indexed)} indexed pages, {len(src.pages) - len(src.indexed)} other pages, "
             f"{len(src.stubs)} redirects, {len(src.exams)} exams, {len(src.site_files)} site files")
+        from apps.core import syllabus
+        for slug, groups in src.syllabus.items():
+            c = syllabus.counts(groups, src.markable)
+            self.stdout.write(f"read {slug} syllabus: {c['items']} items; {c['with a unit']} taught in a unit, "
+                              f"{c['page only']} only on pages with nothing to mark, {c['not here']} not here")
         if dry_run:
             self.stdout.write("dry run: nothing written")
             return
@@ -38,4 +43,7 @@ class Command(BaseCommand):
             raise CommandError(f"{e} -- nothing was committed") from e
         self.stdout.write(f"pages: {counts['created']} created, {counts['updated']} updated, "
                           f"{counts['unchanged']} unchanged, {counts['deleted']} deleted")
+        sy = counts["syllabus"]
+        self.stdout.write(f"syllabus items: {sy['created']} created, {sy['updated']} updated, "
+                          f"{sy['unchanged']} unchanged, {sy['deleted']} deleted")
         self.stdout.write(self.style.SUCCESS("stored: " + ", ".join(f"{v} {k}" for k, v in stored.items())))

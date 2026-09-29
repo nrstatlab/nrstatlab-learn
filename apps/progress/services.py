@@ -28,6 +28,21 @@ class NotAUnit(Exception):
     """The page id is not a markable unit."""
 
 
+# Cards other apps add to the dashboard. progress imports no app that depends on it,
+# so an app registers a card here (in its AppConfig.ready) as it registers its part
+# of the data export with accounts. A card is fn(user) -> {"template", ...} or None.
+_CARDS = []
+
+
+def register_card(fn):
+    if fn not in _CARDS:
+        _CARDS.append(fn)
+
+
+def cards(user):
+    return [c for c in (fn(user) for fn in _CARDS) if c]
+
+
 def _local_date(dt):
     return timezone.localtime(dt, LOCAL).date()
 

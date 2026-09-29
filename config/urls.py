@@ -14,6 +14,7 @@ urlpatterns = [
     path("me/", include("apps.progress.urls")),
     path("test/", include("apps.assessments.urls")),
     path("papers/", include("apps.papers.urls")),
+    path("readiness/", include("apps.examinations.urls")),
     path("privacy.html", core.privacy, name="privacy"),
     re_path(r"^(?P<path>.*)$", core.page),
 ]

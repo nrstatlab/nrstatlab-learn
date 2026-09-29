@@ -1,0 +1,16 @@
+{% extends "base_app.html" %}
+{% block head_title %}Readiness{% endblock %}
+{% block content %}
+<h1>How ready you are</h1>
+<p class="app-lead">For each exam, how much of its syllabus you have covered by passing the unit tests of
+the units that teach it, from the exam's syllabus map on this site.</p>
+<ul class="app-courses">
+  {% for row in rows %}
+  <li class="app-card">
+    <a class="app-course-title" href="{% url 'readiness_exam' row.exam.slug %}">{{ row.exam.name }}</a>
+    <div class="app-bar" role="img" aria-label="{{ row.s.percent|floatformat:"-1" }}% ready"><span style="width: {{ row.s.percent|floatformat:"-1" }}%"></span></div>
+    <p class="app-quiet">{{ row.s.percent|floatformat:"-1" }}% ready · at most {{ row.s.ceiling|floatformat:"-1" }}% today{% if row.target %} · <b>your exam</b>{% endif %}</p>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base_app.html" %}
+{% block head_title %}{{ exam.name }}: readiness{% endblock %}
+{% block content %}
+<p class="app-quiet"><a href="{% url 'readiness_index' %}">Readiness</a> · <a href="/{{ exam.hub_path }}">{{ exam.name }} syllabus map</a></p>
+<h1>{{ exam.name }}: how ready you are</h1>
+
+<div class="app-card ready-summary">
+  <p class="ready-figure"><b>{{ r.percent|floatformat:"-1" }}%</b> ready</p>
+  <div class="app-bar" role="img" aria-label="{{ r.percent|floatformat:"-1" }}% ready"><span style="width: {{ r.percent|floatformat:"-1" }}%"></span></div>
+  <p>{{ r.units_tested }} of the {{ r.units_needed }} units this exam needs have a unit test yet, so today the most
+    you can reach is <b>{{ r.ceiling|floatformat:"-1" }}%</b>. It rises as tests are added.</p>
+  <p class="app-quiet">Only units you have passed count: a unit is passed by passing its unit test. You have passed
+    {{ r.units_passed }} and marked {{ r.units_studied }} more done; units marked done are shown below for your own
+    reference, and do not count. The figure is the average, over the {{ r.counted }} syllabus lines taught in a
+    unit here, of the share of each line's units you have passed (a unit that teaches a line in depth counts
+    twice one that covers it at exam level). The syllabus lines are those of this exam's
+    <a href="/{{ exam.hub_path }}">syllabus map</a>, which names its official source.</p>
+  <form method="post" action="{% url 'readiness_target' exam.slug %}">{% csrf_token %}
+    {% if is_target %}<p>This is your exam. <input type="hidden" name="action" value="clear">
+      <button type="submit" class="app-secondary">Stop preparing for it</button></p>
+    {% else %}<p><button type="submit">Make this my exam</button>
+      <span class="app-quiet">It shows on your dashboard.</span></p>{% endif %}
+  </form>
+</div>
+
+<section aria-labelledby="next-h">
+  <h2 id="next-h">Next to study</h2>
+  {% if r.next %}
+  <ol class="ready-next">
+    {% for u in r.next %}
+    <li><a href="/{{ u.path }}">{{ u.title }}</a> <span class="app-quiet">· teaches {{ u.items }} line{{ u.items|pluralize }} of this syllabus · {{ u.step }}</span></li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p>Nothing left to do here until more unit tests are written: every unit this exam needs is passed, or
+  marked done and waiting for its test.</p>
+  {% endif %}
+</section>
+
+<h2>The syllabus, line by line</h2>
+{% for g in r.groups %}
+<section class="ready-group" aria-labelledby="g{{ forloop.counter }}">
+  <h3 id="g{{ forloop.counter }}">{{ g.title|safe }}</h3>
+  <ul class="ready-items">
+    {% for it in g.items %}
+    <li class="app-card ready-item">
+      <p class="ready-line">{{ it.text|safe }}</p>
+      {% if it.percent is not None %}
+      <div class="app-bar ready-bar" role="img" aria-label="{{ it.percent }}% of this line's units passed"><span style="width: {{ it.percent }}%"></span></div>
+      <ul class="ready-units">
+        {% for lk in it.links %}{% if lk.unit %}
+        <li><a href="/{{ lk.path }}">{{ lk.title }}</a>
+          <span class="ready-status is-{{ lk.status }}">{% if lk.status == "passed" %}passed{% elif lk.status == "studied" %}marked done{% else %}not started{% endif %}</span>
+          <span class="app-quiet">{% if lk.depth == "deep" %}in depth{% else %}at exam level{% endif %}{% if not lk.has_test and lk.status != "passed" %} · no test yet{% endif %}</span></li>
+        {% endif %}{% endfor %}
+      </ul>
+      {% elif it.links %}
+      <p class="app-quiet">Taught here on a page with nothing to mark: {% for lk in it.links %}<a href="/{{ lk.path }}">{{ lk.title }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}. Not counted.</p>
+      {% else %}
+      <p class="app-quiet">Not taught on this site yet. Not counted.</p>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endfor %}
+
+{% if r.page_only %}
+<section aria-labelledby="pageonly-h">
+  <h2 id="pageonly-h">Taught here on pages with nothing to mark ({{ r.page_only|length }})</h2>
+  <p class="app-quiet">A course's home page, a guide or self-study notes teach these lines; they have no unit to
+  pass, so they are not in the figure.</p>
+  <ul>{% for it in r.page_only %}<li>{{ it.text|safe }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+{% if r.not_here %}
+<section aria-labelledby="nothere-h">
+  <h2 id="nothere-h">Not taught on this site yet ({{ r.not_here|length }})</h2>
+  <p class="app-quiet">Not in the figure. Study these from other sources.</p>
+  <ul>{% for it in r.not_here %}<li>{{ it.text|safe }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+{% endblock %}

@@ -8,18 +8,19 @@ stores what Django needs to serve every page at its current path:
 * every redirect stub, as a Redirect row (served as a 301);
 * the courses and their markable units, from course_catalogue.py and
   assets/progress-index.json;
-* the five exams;
+* the five exams, and each one's syllabus map: its items, graded, and their
+  links to the pages that teach them (apps/core/syllabus.py);
 * every non-HTML site file, copied to SITE_ROOT_DIR at the same path, where
   WhiteNoise serves it.
 
-Question banks and syllabus maps are imported in the phases that use them
-(Phase 3 and Phase 5).
+The question banks are imported by import_questions (Phase 3).
 
 The counts it stores are checked against the counts it read, so nothing can be
 silently dropped. It is idempotent: an unchanged page is not written again.
 """
 from __future__ import annotations
 
+import html
 import importlib.util
 import json
 import posixpath
@@ -102,6 +103,7 @@ class Source:
     markable: dict = field(default_factory=dict)    # rel -> (course path, order)
     exams: list = field(default_factory=list)
     site_files: list = field(default_factory=list)  # rel paths of non-HTML files
+    syllabus: dict = field(default_factory=dict)    # exam slug -> groups (apps/core/syllabus.py)
 
     @classmethod
     def read(cls, root: Path) -> Source:
@@ -142,8 +144,13 @@ class Source:
                 src.markable[f"{cpath}/{fname}"] = (cpath, i)
         for order, slug in enumerate(EXAMS):
             hub = f"exams/{slug}/index.html"
-            src.exams.append({"slug": slug, "name": re.sub(r"&amp;", "&", nav.label_of(root / hub)),
+            src.exams.append({"slug": slug, "name": html.unescape(nav.label_of(root / hub, drop_artefact=True)),
                               "hub_path": hub, "order": order})
+        from . import syllabus
+        try:
+            src.syllabus = syllabus.read_syllabus(root, src.stubs, src.markable, src.pages)
+        except syllabus.SyllabusError as e:
+            raise ImportError_(str(e)) from e
         return src
 
     @staticmethod
@@ -199,6 +206,7 @@ def write_database(src: Source) -> dict:
     for old, new in src.stubs.items():
         Redirect.objects.update_or_create(old_path=old, defaults={"new_path": new})
     examinations.store_exams(src.exams)
+    counts["syllabus"] = examinations.store_syllabus(src.syllabus)
     return counts
 
 
@@ -217,6 +225,12 @@ def verify_database(src: Source) -> dict:
         "exams": len(src.exams),
     }
     wrong = {k: (stored[k], expected[k]) for k in expected if stored[k] != expected[k]}
+    from . import syllabus
+    have = examinations.syllabus_counts()
+    for slug, groups in src.syllabus.items():
+        if have.get(slug) != syllabus.counts(groups, src.markable):
+            wrong[f"syllabus of {slug}"] = (have.get(slug), syllabus.counts(groups, src.markable))
     if wrong:
         raise ImportError_(f"stored counts differ from the source: {wrong}")
+    stored["syllabus items"] = sum(c["items"] for c in have.values())
     return stored

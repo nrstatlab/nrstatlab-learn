@@ -16,6 +16,8 @@
 </section>
 {% endif %}
 
+{% for card in cards %}{% include card.template with card=card %}{% endfor %}
+
 <section aria-labelledby="courses-h">
   <h2 id="courses-h">Your courses</h2>
   {% if courses %}

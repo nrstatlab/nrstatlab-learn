@@ -1,0 +1,13 @@
+<section class="app-card ready-card" aria-labelledby="ready-h">
+  <h2 id="ready-h">Your exam</h2>
+  {% if card.summary %}
+  <p><a href="{{ card.summary.url }}">{{ card.summary.name }}</a>: <b>{{ card.summary.percent|floatformat:"-1" }}% ready</b>
+    <span class="app-quiet">(at most {{ card.summary.ceiling|floatformat:"-1" }}% today)</span></p>
+  <div class="app-bar" role="img" aria-label="{{ card.summary.percent|floatformat:"-1" }}% ready"><span style="width: {{ card.summary.percent|floatformat:"-1" }}%"></span></div>
+  {% if card.summary.next %}<p>Next: <a href="/{{ card.summary.next.path }}">{{ card.summary.next.title }}</a>
+    <span class="app-quiet">· {{ card.summary.next.step }}</span></p>{% endif %}
+  {% else %}
+  <p><a href="{% url 'readiness_index' %}">Choose the exam you are preparing for</a>, and see how ready you are
+  and what to study next.</p>
+  {% endif %}
+</section>
