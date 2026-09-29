@@ -4,6 +4,7 @@ from django.shortcuts import render
 
 from apps.study import services as study
 
+from . import csp
 from .inject import inject
 from .models import Redirect
 
@@ -33,13 +34,14 @@ def page(request, path=""):
     found = study.find(legacy)
     if found is None:
         return not_found(request)
-    return HttpResponse(inject(study.render_html(found), request, found.legacy_path), content_type=HTML)
+    body = inject(study.render_html(found), request, found.legacy_path)
+    return csp.attach(HttpResponse(body, content_type=HTML), body, found.legacy_path)
 
 
 def not_found(request, exception=None):
     stored = study.find("404.html")
     body = inject(study.render_html(stored), request) if stored else "<h1>Page not found</h1>"
-    return HttpResponseNotFound(body, content_type=HTML)
+    return csp.attach(HttpResponseNotFound(body, content_type=HTML), body, "404.html")
 
 
 def privacy(request):

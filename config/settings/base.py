@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "csp",
     "django.contrib.sites",
     "allauth",
     "allauth.account",
@@ -49,6 +50,7 @@ SITE_ID = 1
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "csp.middleware.CSPMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -62,6 +64,25 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "config.urls"
+
+# The Content Security Policy (BUILD-GUIDE Step 16), everywhere, the laptop included. The
+# application's pages run scripts from this origin only; a page of the site adds exactly
+# what it needs itself (apps/core/csp.py). MathJax is served from here, and adds styles.
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": ["'self'"],
+        "script-src": ["'self'"],
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "img-src": ["'self'", "data:"],
+        "font-src": ["'self'"],
+        "connect-src": ["'self'"],
+        "frame-ancestors": ["'none'"],
+        "object-src": ["'none'"],
+        "base-uri": ["'self'"],
+        # allauth's Google sign-in posts here, then redirects to Google
+        "form-action": ["'self'", "https://accounts.google.com"],
+    },
+}
 WSGI_APPLICATION = "config.wsgi.application"
 
 TEMPLATES = [
