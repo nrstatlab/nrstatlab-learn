@@ -13,7 +13,7 @@ Everything here runs on a computer only. Nothing is online until the owner signs
 | A question with a negative r_pb is flagged automatically | **Met.** The same sittings with the groups swapped give **r_pb = −0.816**. The question is flagged with the reason, it leaves every test, its history records it, and the reviewers get one email |
 | The reviewer workflow | **Met.** A queue of draft and flagged questions. A side-by-side review page with MathJax: the question as the learner sees it; the key, the working, the recompute log, the statistics and the unit. **Approve**, refused to the question's author. **Send back**, which needs a note. The full history |
 | Every change is kept in history | **Met.** A small audit table, with no new dependency. It records imports, changes in the source, retirement, flags by the statistics, approvals, send-backs, and every edit made in the admin |
-| CI | CI_RESULT |
+| CI | **Green on GitHub.** Run #14 on `15f6cd1` passed every step: lint, checks (the new migrations included), both import dry runs, and the full test suite with the browser tests |
 
 ## The statistics, as built
 
