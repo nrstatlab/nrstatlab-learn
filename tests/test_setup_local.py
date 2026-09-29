@@ -22,12 +22,12 @@ def test_it_refuses_without_debug(settings):
 def test_it_makes_the_three_accounts_once(settings, django_user_model, capsys):
     settings.DEBUG = True
     call_command("setup_local", "--skip-import")
-    emails = {setup_local.OWNER[0], setup_local.NEW[0], setup_local.PROGRESSED[0]}
+    emails = {setup_local.OWNER[0], setup_local.NEW[0], setup_local.PROGRESSED[0], setup_local.REVIEWER[0]}
     assert set(django_user_model.objects.filter(email__in=emails).values_list("email", flat=True)) == emails
     assert django_user_model.objects.get(email=setup_local.OWNER[0]).is_staff
     call_command("setup_local", "--skip-import")
     assert "already there" in capsys.readouterr().out
-    assert django_user_model.objects.filter(email__in=emails).count() == 3
+    assert django_user_model.objects.filter(email__in=emails).count() == 4
 
 
 def test_the_learner_with_progress_has_a_pass_and_a_fail(settings, django_user_model):
@@ -54,7 +54,26 @@ def test_the_learner_with_progress_has_sat_a_paper(settings, django_user_model):
 def test_the_demo_learners_can_sign_in(settings, client):
     settings.DEBUG = True
     call_command("setup_local", "--skip-import")
-    for email in (setup_local.NEW[0], setup_local.PROGRESSED[0], setup_local.OWNER[0]):
+    for email in (setup_local.NEW[0], setup_local.PROGRESSED[0], setup_local.OWNER[0], setup_local.REVIEWER[0]):
         client.post("/accounts/login/", {"login": email, "password": setup_local.PASSWORD})
         assert "_auth_user_id" in client.session, email
         client.logout()
+
+
+def test_the_review_demo_data(settings, django_user_model):
+    """Two reviewers, a draft by the owner that only the other may approve, and 40
+    anonymous sittings in which one question is planted with a negative r_pb."""
+    from apps.assessments import review, stats
+    from apps.assessments.models import Question
+
+    settings.DEBUG = True
+    call_command("setup_local", "--skip-import")
+    owner = django_user_model.objects.get(email=setup_local.OWNER[0])
+    second = django_user_model.objects.get(email=setup_local.REVIEWER[0])
+    assert review.is_reviewer(owner) and review.is_reviewer(second) and not second.is_superuser
+    draft = Question.objects.get(uid="local-demo-draft-001")
+    with pytest.raises(review.ReviewRefused):
+        review.approve(draft, owner)
+    review.approve(draft, second)
+    flagged = [uid for uid, _ in stats.run(notify=False)["flagged"]]
+    assert flagged == ["ugc-mcq-u01-q10"]
