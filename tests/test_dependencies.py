@@ -12,7 +12,7 @@ ALLOWED = {
     "core": {"study", "examinations", "papers", "progress", "accounts", "assessments"},
     "accounts": set(),
     "study": {"accounts"},
-    "examinations": {"study", "progress", "accounts"},
+    "examinations": {"study", "progress", "accounts", "assessments"},
     "papers": {"assessments", "examinations", "accounts", "progress"},
     "assessments": {"study", "progress", "accounts"},
     "progress": {"study", "accounts"},

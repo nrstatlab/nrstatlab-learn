@@ -36,8 +36,10 @@ def test_stub_targets_resolve(stub, url, target):
 @pytest.mark.django_db
 def test_import_is_idempotent_and_complete(source):
     counts = importer.write_database(source)
-    assert counts == {"created": 0, "updated": 0, "unchanged": len(source.pages), "deleted": 0}
+    assert counts == {"created": 0, "updated": 0, "unchanged": len(source.pages), "deleted": 0,
+                      "syllabus": {"created": 0, "updated": 0, "unchanged": 501, "deleted": 0}}
     stored = importer.verify_database(source)
+    assert stored["syllabus items"] == 501
     assert stored["markable units"] == len(source.markable) == 310
     assert stored["courses"] == 56 and stored["exams"] == 5
 

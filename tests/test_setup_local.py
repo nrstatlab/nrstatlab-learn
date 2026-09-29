@@ -48,6 +48,7 @@ def test_the_learner_with_progress_has_sat_a_paper(settings, django_user_model):
     # 90 right, 30 wrong at -0.33, of the 140 questions that count (docs/LOCAL-CHECK.md, 4.8)
     assert (sat.mode, sat.score, sat.max_score) == ("exam", Decimal("80.10"), Decimal("140.00"))
     assert [p["score"] for p in progress.recent_papers(user)] == ["80.10"]
+    assert user.exam_target.exam.slug == "ugc-net"          # the dashboard's "Your exam" card
 
 
 def test_the_demo_learners_can_sign_in(settings, client):

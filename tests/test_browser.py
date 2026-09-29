@@ -303,3 +303,27 @@ def test_the_clock_submits_the_paper_when_it_runs_out(page, site, learner):
     page.wait_for_url(f"{site}/papers/attempt/{s.attempt_id}/review", timeout=15000)
     s.attempt.refresh_from_db()
     assert s.attempt.submitted_at is not None
+
+
+def test_readiness_from_an_exams_map_rises_with_a_passed_test(page, site, learner):
+    """CSIR NET: UGC NET Unit II is the only unit link of 10 of its 39 counted lines, so
+    passing its test takes readiness from 0% to 10/39 = 25.6%."""
+    from apps.assessments import services as assessments
+    from apps.progress import services as progress
+
+    sign_in_to(page, site, learner.email, "exams/csir-net/index.html")
+    box = page.locator(".learn-ready")
+    assert "Your readiness for CSIR NET Mathematical Sciences: 0%" in box.inner_text()
+    box.get_by_role("link", name="See what to study next").click()
+    page.wait_for_url(f"{site}/readiness/csir-net/")
+    assert page.locator(".ready-figure").inner_text() == "0% ready"
+    progress.mark_studied(learner, "exams/ugc-net/unit2.html")
+    assessments.sit_test(learner, "exams/ugc-net/unit2.html", right=10)
+    page.reload()
+    assert page.locator(".ready-figure").inner_text() == "25.6% ready"
+    page.get_by_role("button", name="Make this my exam").click()
+    page.wait_for_url(f"{site}/readiness/csir-net/")
+    assert "This is your exam." in page.content()
+    page.goto(f"{site}/me/")
+    card = page.locator(".ready-card")
+    assert "CSIR NET Mathematical Sciences: 25.6% ready" in card.inner_text()
