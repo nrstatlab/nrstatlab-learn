@@ -57,9 +57,15 @@ git pull --recurse-submodules
 docker compose up --build
 ```
 
-**Needs internet for one thing:** the mathematics on the pages is drawn by MathJax, loaded from the
-internet, exactly as on the live site today. Without a connection, formulas show as `$…$` text.
-Everything else works offline.
+**Needs internet only for the first download.** Once `docker compose up --build` has run once, the
+platform works with Wi-Fi off. The mathematics is drawn by the app's own copy of MathJax, so formulas
+appear offline too. The one exception is four lab and notes pages that load an outside library for
+their demonstration:
+- Mermaid diagrams on two Data Science units;
+- Prism and Google Fonts on the archived Machine Learning notes;
+- jQuery on one Web Technologies lab.
+
+Offline, those demonstrations don't run; the rest of each page does.
 
 ## 2. The checks
 
@@ -271,6 +277,30 @@ question planted to behave badly.
   flagged question, set its status to **published** and save. It is refused, and points you to the
   review queue.
 
+### Before launch: the offline part of Phase 7
+
+- [ ] **7.1 Formulas draw with Wi-Fi off.** Turn Wi-Fi off, or pull the network cable. Open
+  http://localhost:8000/statistics/descriptive-statistics/unit3.html and scroll: every formula is
+  drawn, none is left as `$…$` text. Then sign in as `progress.learner@localhost`, open
+  http://localhost:8000/papers/ and click the score under the APPSC 2025 paper ("Your last
+  sitting"): the review's formulas are drawn too. Turn Wi-Fi back on.
+- [ ] **7.2 Back up, start again from nothing, restore.** In a second terminal, in the
+  `nrstatlab-learn` folder:
+  1. Sign in as `new.learner@localhost` and press **Mark this unit done** on any unit page, so
+     there is something of yours to lose.
+  2. See what the database holds: `docker compose exec web python manage.py data_counts`. Keep the
+     output.
+  3. Back up: `docker compose exec db pg_dump -U nrstatlab -Fc -f /backups/nrstatlab.dump nrstatlab`.
+     The file appears in the `backups` folder on this computer.
+  4. Start again from nothing: `docker compose down -v`, then `docker compose up -d`, and wait until
+     http://localhost:8000 opens. Meera's unit is no longer done.
+  5. Restore:
+     1. `docker compose stop web`;
+     2. `docker compose exec db pg_restore -U nrstatlab -d nrstatlab --clean --if-exists /backups/nrstatlab.dump`;
+     3. `docker compose start web`.
+  6. Run `data_counts` again. Every figure is the same as in step 2. Signed in as
+     `new.learner@localhost`, that unit is done again.
+
 ### Last of all
 
 - [ ] **L.1 Five wrong passwords lock sign-in.** Do this one last: it locks the account for a while.
@@ -283,7 +313,8 @@ question planted to behave badly.
 
 ## 3. What is not here yet
 
-- **Phase 7:** launch: security, hosting and the domain.
+- **Phase 7, the online part:** the host, the domain, the email provider, the legal review, staging
+  and going live. Each waits for your choice; `docs/DEPLOY.md` lists them.
 - **Google sign-in** appears once its client is set up, before staging.
 
 ## 4. Without Docker
