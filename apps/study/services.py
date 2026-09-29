@@ -4,6 +4,7 @@ these functions; nothing outside this app reads or writes Unit or Page directly
 import re
 
 from django.conf import settings
+from django.templatetags.static import static
 
 from .models import Course, Page, Programme, Unit
 from .pages import assemble, page_fields
@@ -16,6 +17,9 @@ BUILT_ORIGIN = "https://nrstatlab.github.io/planning-for-future"
 BUILT_BASE = "/planning-for-future/"
 _BASE_IN_ATTR = re.compile(r"""(["'(])/planning-for-future/""")
 UNIT_NO_RE = re.compile(r"unit(\d+)\.html$")
+# The pages load MathJax 3 from a CDN; the app serves its own copy (static/vendor/mathjax),
+# so formulas draw with no internet connection and the CSP names no outside host for them.
+MATHJAX_CDN = re.compile(r"https://cdn\.jsdelivr\.net/npm/mathjax@3/es5/([\w.-]+\.js)")
 
 
 # ---------------------------------------------------------------- reading
@@ -40,13 +44,15 @@ def exists(legacy_path):
 
 
 def rewrite_for_origin(html, origin=None, base=None):
+    """A stored page as served: its origin and base path for this host, and MathJax from
+    the app's own copy."""
     origin = (origin or settings.SITE_ORIGIN).rstrip("/")
     base = base or settings.SITE_BASE_PATH
     if origin != BUILT_ORIGIN:
         html = html.replace(BUILT_ORIGIN, origin)
     if base != BUILT_BASE:
         html = _BASE_IN_ATTR.sub(lambda m: m.group(1) + base, html)
-    return html
+    return MATHJAX_CDN.sub(lambda m: static("vendor/mathjax/es5/" + m.group(1)), html)
 
 
 def render_html(page):

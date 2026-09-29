@@ -1,8 +1,3 @@
-{# The site's own MathJax set-up (tools/exams/appsc_paper.py), so maths reads the same here. #}
-<script>
-window.MathJax = {
-  tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']], processEscapes: true },
-  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
-};
-</script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+{% load static %}{# MathJax, from the app's own copy (static/vendor/mathjax), with the site's set-up. #}
+<script src="{% static 'learn/mathjax-config.js' %}"></script>
+<script src="{% static 'vendor/mathjax/es5/tex-mml-chtml.js' %}" async></script>
