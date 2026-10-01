@@ -25,7 +25,7 @@ still open"). `docs/LOCAL-CHECK.md` gains checks 7.1 and 7.2.
 | The nightly `item_stats` | **Ready for the host:** the cron line, and what it needs, in `docs/DEPLOY.md` |
 | The coverage gate (Step 15) | **Met.** CI fails below 90% for the scoring and progress apps. They are at 96% |
 | The two browser flows Step 15 lists that were missing | **Met,** each at 390 px and 1280 px: fail a unit test, retake it and pass; download my data, then delete the account |
-| CI | **Green on GitHub.** Run #16 on `c9f5d63` passed every step: lint, the Django checks and `check --deploy`, migrations, both import dry runs, the full suite with the browser tests, the new 90% coverage gate, and the new `pip-audit` |
+| CI | **Green on GitHub.** Run #16 on `c9f5d63` passed every step: lint, the Django checks and `check --deploy`, migrations, both import dry runs, the full suite with the browser tests, the new 90% coverage gate, and the new `pip-audit`. Run #17 then failed `pip-audit` on a newly published advisory (below); **run #18, on `1b9a92c`, is green** with the fix |
 
 ## The Content Security Policy, as built (`apps/core/csp.py`)
 
