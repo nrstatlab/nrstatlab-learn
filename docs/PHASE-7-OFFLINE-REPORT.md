@@ -106,6 +106,13 @@ anyone else, so an id reveals nothing, not even that it exists.
   dollars (`$5,000`). Those amounts are real text, marked so MathJax leaves them alone, and the checks
   skip them.
 
+- **The new `pip-audit` step caught a fresh advisory within two days.** Run #17, on a docs-only
+  commit, failed it. GHSA-xpv3-w29h-x7cv was published after run #16: a timing leak in oauthlib's
+  provider-side PKCE check. This app is only an OAuth client and never runs that code, but the fix is
+  simple. django-allauth 65.19.6 is allauth's own security release for it, and requires oauthlib 4.0.0.
+  Its one incompatible change is in the Bitbucket and Pinterest providers, which are not used here.
+  Upgraded from 65.19.4; the full suite, the checks and `pip-audit` pass again.
+
 ## For the owner
 
 1. **Walk 7.1 and 7.2** in `docs/LOCAL-CHECK.md`: formulas with Wi-Fi off, and a backup and restore.
