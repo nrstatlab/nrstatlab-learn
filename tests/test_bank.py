@@ -1,24 +1,33 @@
 """The question bank (BUILD-GUIDE Step 9): counts match their sources, every key is one
-of its question's own options, and the keys in doubt can never be scored."""
+of its question's own options, the answers the owner settled on 2 October 2026 are the
+ones stored, and a question with no correct option can never be scored."""
 import json
 
 import pytest
 from django.core.management import call_command
 
+from apps.assessments import engine
 from apps.assessments import services as assessments
-from apps.assessments.models import Question, QuestionUnit
-from apps.core.questions import CONTESTED
+from apps.assessments.models import Question, QuestionUnit, UnitTest
 from apps.papers.models import PaperQuestion, SolvedPaper
 
 pytestmark = pytest.mark.django_db
 SOURCES = {"ugc-mcq-": 500, "ugc-2026-": 150, "appsc-aso-2025-": 150, "appsc-aso-2022-": 150}
+NEVER_SCORED = {"appsc-aso-2025-": 1}          # Q134: no option is correct
+# The answers the owner settled on 2 October 2026 (docs/AUDIT-2026-09.md §5.1, content repository)
+# where they are not the old key, and the two withdrawn 2022 questions now answered.
+SETTLED = {"ugc-mcq-u03-q39": "B", "ugc-mcq-u05-q50": "A", "ugc-mcq-u07-q14": "B", "ugc-mcq-u08-q16": "A",
+           "appsc-aso-2025-q143": "2", "appsc-aso-2022-q010": "1", "appsc-aso-2022-q127": "1",
+           "appsc-aso-2022-q138": "4", "appsc-aso-2022-q051": "2", "appsc-aso-2022-q081": "1",
+           # confirmed as they were
+           "ugc-mcq-u02-q45": "B", "ugc-mcq-u05-q41": "A", "ugc-2026-q042": "B", "appsc-aso-2022-q107": "3"}
 
 
 def test_each_source_is_read_and_stored_in_full(bank):
     for prefix, n in SOURCES.items():
         assert bank.count(prefix) == bank.expected[prefix] == n, prefix
         stored = assessments.bank_counts(prefix)
-        assert stored["total"] == n and stored["retired"] == 0, (prefix, stored)
+        assert stored["total"] == n and stored["retired"] == NEVER_SCORED.get(prefix, 0), (prefix, stored)
     assert Question.objects.count() == sum(SOURCES.values())
 
 
@@ -26,8 +35,8 @@ def test_every_key_is_one_of_its_own_options():
     wrong = []
     for q in Question.objects.prefetch_related("choices"):
         correct = [c.label for c in q.choices.all() if c.is_correct]
-        withdrawn = q.flag_reason.startswith("Withdrawn by the Commission")
-        if (withdrawn and correct) or (not withdrawn and len(correct) != 1) or len(q.choices.all()) != 4:
+        none_right = q.flag_reason.startswith("No option is correct")
+        if (none_right and correct) or (not none_right and len(correct) != 1) or len(q.choices.all()) != 4:
             wrong.append((q.uid, correct))
     assert not wrong, wrong[:5]
 
@@ -41,25 +50,42 @@ def test_stored_keys_are_the_sources_keys(bank):
             assert q.stem_html == item["stem_html"]
 
 
-def test_the_six_contested_keys_are_flagged_with_the_audits_reason():
-    for (unit, n), reason in CONTESTED.items():
-        q = Question.objects.get(uid=f"ugc-mcq-u{unit:02d}-q{n:02d}")
-        assert q.status == Question.FLAGGED and reason in q.flag_reason and "AUDIT-2026-09" in q.flag_reason
-    assert Question.objects.filter(uid__startswith="ugc-mcq-", status=Question.FLAGGED).count() == 6
+def test_the_settled_answers_are_the_stored_keys():
+    for uid, key in SETTLED.items():
+        q = Question.objects.prefetch_related("choices").get(uid=uid)
+        assert [c.label for c in q.choices.all() if c.is_correct] == [key], uid
+        assert q.status == Question.PUBLISHED and not q.flag_reason, uid
+    assert "settled by the owner" in Question.objects.get(uid="appsc-aso-2022-q010").recompute_log
+    assert "settled by the owner" in Question.objects.get(uid="ugc-mcq-u07-q14").recompute_log
 
 
-def test_the_withdrawn_questions_are_marked_on_their_papers():
+def test_no_question_is_held_back_by_its_source():
+    assert not Question.objects.filter(status=Question.FLAGGED).exists()
+    assert set(Question.objects.filter(status=Question.RETIRED).values_list("uid", flat=True)) == {"appsc-aso-2025-q134"}
+
+
+def test_a_question_with_no_correct_option_is_never_scored():
+    q = Question.objects.prefetch_related("choices").get(uid="appsc-aso-2025-q134")
+    assert q.status == Question.RETIRED and not any(c.is_correct for c in q.choices.all())
+    assert "No option is correct" in q.flag_reason and "0.631" in q.flag_reason
     withdrawn = {(pq.paper.slug, pq.number) for pq in PaperQuestion.objects.filter(withdrawn=True)}
-    assert withdrawn == {("appsc-aso-2025-paper-ii", 134), ("appsc-aso-2022-paper-ii", 51), ("appsc-aso-2022-paper-ii", 81)}
-    for pq in PaperQuestion.objects.filter(withdrawn=True):
-        assert "discrepancy" in pq.withdrawn_note and pq.official_key == ""
-        assert pq.question.status == Question.FLAGGED
+    assert withdrawn == {("appsc-aso-2025-paper-ii", 134)}
+    pq = PaperQuestion.objects.get(paper__slug="appsc-aso-2025-paper-ii", number=134)
+    assert "No option is correct" in pq.withdrawn_note and pq.official_key == ""
+    for ut in UnitTest.objects.filter(unit__question_links__question=q):
+        assert q.uid not in [x.uid for x in engine.pool(ut)]
 
 
-def test_warning_notes_on_solved_pages_flag_their_questions():
-    assert Question.objects.filter(uid__startswith="ugc-2026-", status=Question.FLAGGED).count() == 7
-    assert "Var(Y)" in Question.objects.get(uid="ugc-2026-q070").flag_reason
-    assert Question.objects.get(uid="appsc-aso-2022-q138").status == Question.FLAGGED
+def test_the_two_withdrawn_2022_questions_now_count():
+    for n in (51, 81):
+        pq = PaperQuestion.objects.get(paper__slug="appsc-aso-2022-paper-ii", number=n)
+        assert not pq.withdrawn and pq.official_key == "" and pq.question.status == Question.PUBLISHED
+
+
+def test_the_june_2026_notes_are_folded_into_the_workings():
+    assert "law of total variance" in Question.objects.get(uid="ugc-2026-q070").solution_html
+    assert "misprint" in Question.objects.get(uid="ugc-2026-q150").solution_html
+    assert not Question.objects.filter(uid__startswith="ugc-2026-", solution_html__contains="class=\"flag\"").exists()
 
 
 def test_questions_without_a_unit_link_stay_out_of_unit_tests():
@@ -104,12 +130,12 @@ def test_a_second_import_changes_nothing(capsys):
 
 def test_a_review_decision_stands_until_the_source_changes(bank):
     item = next(i for i in bank.sources["ugc-mcq-"] if i["uid"] == "ugc-mcq-u05-q50")
-    Question.objects.filter(uid=item["uid"]).update(status=Question.PUBLISHED)   # the owner settles it
+    Question.objects.filter(uid=item["uid"]).update(status=Question.FLAGGED)     # a reviewer flags it
     assessments.store_questions(bank.sources["ugc-mcq-"], prefix="ugc-mcq-")
-    assert Question.objects.get(uid=item["uid"]).status == Question.PUBLISHED
+    assert Question.objects.get(uid=item["uid"]).status == Question.FLAGGED
     changed = [dict(i, stem_html=i["stem_html"] + " (reworded)") if i is item else i for i in bank.sources["ugc-mcq-"]]
     assessments.store_questions(changed, prefix="ugc-mcq-")
-    assert Question.objects.get(uid=item["uid"]).status == Question.FLAGGED   # edited: back to review
+    assert Question.objects.get(uid=item["uid"]).status == Question.PUBLISHED   # edited: the source's status
 
 
 def test_a_question_the_source_drops_is_retired_not_deleted(bank):

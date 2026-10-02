@@ -18,6 +18,14 @@ from apps.assessments.models import Attempt, ItemStats, Question, QuestionEvent,
 
 pytestmark = pytest.mark.django_db
 UNIT = "exams/ugc-net/unit1.html"
+# No question imports as flagged since the owner settled the review queue on 2 October 2026,
+# so these three are put in review for each test, as a reviewer or the statistics would.
+IN_REVIEW = ["appsc-aso-2022-q140", "ugc-mcq-u02-q45", "ugc-mcq-u05-q41"]
+
+
+@pytest.fixture(autouse=True)
+def in_review():
+    Question.objects.filter(uid__in=IN_REVIEW).update(status=Question.FLAGGED, flag_reason="Put in review for a test.")
 
 
 @pytest.fixture
@@ -184,10 +192,13 @@ def test_no_one_approves_their_own_question(reviewer, make_learner):
 
 
 def test_a_question_without_a_key_cannot_be_published(reviewer):
-    withdrawn = Question.objects.get(uid="appsc-aso-2025-q134")
+    none_right = Question.objects.get(uid="appsc-aso-2025-q134")          # no option is correct: retired
+    with pytest.raises(review.ReviewRefused, match="retired"):
+        review.approve(none_right, reviewer)
+    Question.objects.filter(pk=none_right.pk).update(status=Question.FLAGGED)
     with pytest.raises(review.ReviewRefused, match="no key"):
-        review.approve(withdrawn, reviewer)
-    assert Question.objects.get(pk=withdrawn.pk).status == Question.FLAGGED
+        review.approve(none_right, reviewer)
+    assert Question.objects.get(pk=none_right.pk).status == Question.FLAGGED
 
 
 def test_send_back_needs_a_note(reviewer):
@@ -202,8 +213,9 @@ def test_send_back_needs_a_note(reviewer):
 
 def test_every_question_has_a_history_from_its_import():
     assert not Question.objects.filter(events__isnull=True).exists()
-    q = Question.objects.filter(status=Question.FLAGGED).first()
-    assert q.events.first().action == QuestionEvent.IMPORTED and q.events.first().to_status == Question.FLAGGED
+    for uid, status in [("ugc-mcq-u07-q14", Question.PUBLISHED), ("appsc-aso-2025-q134", Question.RETIRED)]:
+        first = Question.objects.get(uid=uid).events.first()
+        assert (first.action, first.to_status) == (QuestionEvent.IMPORTED, status), uid
 
 
 def test_a_change_in_the_source_is_recorded(source):

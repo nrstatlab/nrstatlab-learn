@@ -24,7 +24,9 @@ APPSC25, APPSC22, UGC26 = "appsc-aso-2025-paper-ii", "appsc-aso-2022-paper-ii", 
 
 
 def appsc_2025_source():
-    """The paper's key and the solved page's flags, read straight from the content repository."""
+    """The right answers and the solved page's flags, read straight from the content repository:
+    the paper's own key from the JSON read from the PDF, with the answers the owner settled
+    (ANSWERS) put in, and a question with no correct option (NO_CORRECT) given none."""
     exams = settings.CONTENT_DIR / "tools" / "exams"
     raw = json.loads((exams / "appsc_paper_2025.json").read_text(encoding="utf-8"))
     key = {q["n"]: q["key"] for q in raw["questions"]}
@@ -35,6 +37,8 @@ def appsc_2025_source():
         spec.loader.exec_module(data)
     finally:
         sys.dont_write_bytecode = before
+    key.update(data.ANSWERS)
+    key.update(dict.fromkeys(data.NO_CORRECT))
     flagged = {n for n, (_t, _w, flag) in data.SOLUTIONS.items() if flag}
     return key, flagged
 
@@ -62,30 +66,27 @@ def right_label(sitting, n):
 def test_appsc_2025_in_exam_mode_scores_as_computed_by_hand(learner, client):
     key, flagged = appsc_2025_source()
     counted = [n for n in sorted(key) if key[n] is not None and n not in flagged]
-    assert len(counted) == 140 and 134 not in counted
+    assert len(counted) == 149 and 134 not in counted and key[143] == 2
     right, wrong = counted[:100], counted[100:120]
     hand = Decimal(len(right)) * Decimal("1") - Decimal(len(wrong)) * Decimal("0.33")   # 93.40
     assert hand == Decimal("93.40")
 
     s = sit(learner, APPSC25)
     for n in right:
-        papers.answer(s, n, tok(s, n, str(key[n])))                   # the Commission's key, as printed (1-4)
+        papers.answer(s, n, tok(s, n, str(key[n])))                   # the right answer, as printed (1-4)
     for n in wrong:
         papers.answer(s, n, tok(s, n, next(str(k) for k in (1, 2, 3, 4) if k != key[n])))
-    for n in sorted(flagged - {134}):                                 # doubtful: answered, and must not count
-        papers.answer(s, n, tok(s, n, wrong_label(s, n)))
-    with pytest.raises(engine.BadAnswer):                             # withdrawn: cannot be answered
+    with pytest.raises(engine.BadAnswer):                             # no correct option: cannot be answered
         papers.answer(s, 134, tok(s, 134, "1"))
     s = papers.submit(s)
-    assert (s.attempt.score, s.attempt.max_score) == (hand, Decimal("140.00"))
-    assert "134" in s.not_counted and s.not_counted["134"].startswith("Withdrawn by the Commission")
-    assert len(s.not_counted) == 10
+    assert (s.attempt.score, s.attempt.max_score) == (hand, Decimal("149.00"))
+    assert list(s.not_counted) == ["134"] and s.not_counted["134"].startswith("No option is correct")
 
     client.force_login(learner)
     html = client.get(f"/papers/attempt/{s.attempt_id}/review").content.decode()
-    assert "93.40 of 140.00" in html
+    assert "93.40 of 149.00" in html
     q134 = html.split('id="q134"')[1].split("</section>")[0]
-    assert "not counted" in q134 and "discrepancy" in q134
+    assert "not counted" in q134 and "0.631" in q134
 
 
 def test_the_section_totals_add_up_to_the_score(learner):
@@ -113,10 +114,10 @@ def test_every_study_link_in_a_review_resolves(learner, client):
 
 def test_each_paper_runs_under_only_what_its_header_records():
     r25, r22, r26 = (papers.rules(SolvedPaper.objects.get(slug=s)) for s in (APPSC25, APPSC22, UGC26))
-    assert (r25["duration"], r25["wrong"], r25["counted"]) == (150, Decimal("-0.33"), 140)
-    assert (r22["duration"], r22["counted"]) == (150, 136)
-    assert [pq.number for pq in r22["withdrawn"]] == [51, 81]
-    assert (r26["duration"], r26["scheme_recorded"], r26["wrong"], r26["counted"]) == (None, False, 0, 143)
+    assert (r25["duration"], r25["wrong"], r25["counted"]) == (150, Decimal("-0.33"), 149)
+    assert [pq.number for pq in r25["withdrawn"]] == [134]
+    assert (r22["duration"], r22["counted"], r22["withdrawn"]) == (150, 150, [])
+    assert (r26["duration"], r26["scheme_recorded"], r26["wrong"], r26["counted"]) == (None, False, 0, 150)
 
 
 def test_ugc_2026_has_no_clock_and_takes_nothing_off(learner):
@@ -128,16 +129,28 @@ def test_ugc_2026_has_no_clock_and_takes_nothing_off(learner):
     for n in counted[10:30]:
         papers.answer(s, n, tok(s, n, wrong_label(s, n)))
     s = papers.submit(s)
-    assert (s.attempt.score, s.attempt.max_score) == (Decimal("10.00"), Decimal("143.00"))
+    assert (s.attempt.score, s.attempt.max_score) == (Decimal("10.00"), Decimal("150.00"))
 
 
-def test_a_doubtful_key_settled_in_the_admin_counts_from_then_on(learner):
-    Question.objects.filter(uid="appsc-aso-2025-q068").update(status="published")
+def test_a_key_put_in_review_stops_counting_and_counts_again_once_settled(learner):
+    Question.objects.filter(uid="appsc-aso-2025-q068").update(status="flagged")      # a reviewer doubts it
+    s = papers.submit(sit(learner, APPSC25))
+    assert s.attempt.max_score == Decimal("148.00") and "68" in s.not_counted
+    Question.objects.filter(uid="appsc-aso-2025-q068").update(status="published")    # and settles it
     s = sit(learner, APPSC25)
     papers.answer(s, 68, tok(s, 68, right_label(s, 68)))
     s = papers.submit(s)
-    assert s.attempt.max_score == Decimal("141.00") and s.attempt.score == Decimal("1.00")
+    assert s.attempt.max_score == Decimal("149.00") and s.attempt.score == Decimal("1.00")
     assert "68" not in s.not_counted
+
+
+def test_the_two_2022_questions_once_withdrawn_now_count(learner):
+    s = sit(learner, APPSC22)
+    for n in (51, 81):
+        papers.answer(s, n, tok(s, n, right_label(s, n)))
+    s = papers.submit(s)
+    assert (s.attempt.score, s.attempt.max_score) == (Decimal("2.00"), Decimal("150.00"))
+    assert right_label(s, 51) == "2" and right_label(s, 81) == "1"
 
 
 # ---------------------------------------------------------------- the clock
@@ -292,15 +305,15 @@ def test_the_pages_of_the_papers_flow(client, learner):
     assert "Carry on with the exam" in client.get(f"/papers/{APPSC25}/").content.decode()
     client.post(f"/papers/attempt/{s.attempt_id}/submit", {"from_form": "1", "q1": tok(s, 1, right_label(s, 1))})
     assert "Old papers" in client.get("/me/").content.decode()
-    assert "1.00 of 140.00" in client.get("/me/").content.decode()
+    assert "1.00 of 149.00" in client.get("/me/").content.decode()
 
 
-def test_a_withdrawn_question_never_counts_even_if_published_by_mistake(learner):
+def test_a_question_with_no_correct_option_never_counts_even_if_published_by_mistake(learner):
     Question.objects.filter(uid="appsc-aso-2025-q134").update(status="published")
     s = sit(learner, APPSC25)
     s = papers.submit(s)
-    assert s.attempt.max_score == Decimal("140.00")
-    assert s.not_counted["134"].startswith("Withdrawn by the Commission")
+    assert s.attempt.max_score == Decimal("149.00")
+    assert s.not_counted["134"].startswith("No option is correct")
 
 
 def test_the_paper_keeps_its_printed_order_and_labels(learner):

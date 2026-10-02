@@ -24,10 +24,11 @@ class Command(BaseCommand):
         except (ValueError, assessments.BankError) as e:
             raise CommandError(str(e)) from e
         for prefix, items in bank.sources.items():
-            flagged = sum(1 for i in items if i["flag_reason"])
+            unscorable = sum(1 for i in items if not i.get("scorable", True))
+            flagged = sum(1 for i in items if i["flag_reason"] and i.get("scorable", True))
             linked = sum(1 for i in items if i["units"])
             self.stdout.write(f"read {prefix}: {len(items)} questions (as the source states), "
-                              f"{flagged} flagged, {linked} linked to a unit")
+                              f"{flagged} flagged, {unscorable} never scored, {linked} linked to a unit")
         if dry_run:
             self.stdout.write("dry run: nothing written")
             return
@@ -39,8 +40,9 @@ class Command(BaseCommand):
                                       f"{c['unchanged']} unchanged, {c['retired']} retired")
                     stored = assessments.bank_counts(prefix)
                     live = stored["total"] - stored["retired"]
-                    if live != len(items):
-                        raise CommandError(f"{prefix}: {live} stored, {len(items)} read -- nothing was committed")
+                    scorable = sum(1 for i in items if i.get("scorable", True))  # the rest are stored retired
+                    if live != scorable:
+                        raise CommandError(f"{prefix}: {live} stored, {scorable} read -- nothing was committed")
                 n = papers.store_papers(bank.papers)
         except (assessments.BankError, papers.PaperError) as e:
             raise CommandError(f"{e} -- nothing was committed") from e

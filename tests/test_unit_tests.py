@@ -91,9 +91,11 @@ def test_a_unit_needs_enough_published_questions(learner):
         engine.start(learner, thin)
 
 
-def test_nineteen_unit_tests_are_open_today():
+def test_twenty_unit_tests_are_open_today():
+    """Nineteen until 2 October 2026, when the settled answers gave Applied Statistics Unit 3 its tenth."""
     open_ = [ut.unit.legacy_path for ut in UnitTest.objects.select_related("unit") if engine.test_for_unit(ut.unit)]
-    assert len(open_) == 19 and all(f"exams/ugc-net/unit{i}.html" in open_ for i in range(1, 11))
+    assert len(open_) == 20 and all(f"exams/ugc-net/unit{i}.html" in open_ for i in range(1, 11))
+    assert "statistics/applied-statistics/unit3.html" in open_
 
 
 def test_one_open_attempt_per_learner_per_test(learner):
@@ -108,7 +110,8 @@ def test_one_open_attempt_per_learner_per_test(learner):
 # ---------------------------------------------------------------- drawing
 
 def test_the_draw_takes_published_questions_of_the_unit_only(learner):
-    ut = ut_for("exams/ugc-net/unit5.html")   # two of its fifty are flagged
+    ut = ut_for("exams/ugc-net/unit5.html")
+    Question.objects.filter(uid__in=["ugc-mcq-u05-q50", "ugc-mcq-u05-q41"]).update(status="flagged")  # two in review
     for seed in range(40):
         uids = engine.draw(ut, learner, seed)
         assert len(uids) == len(set(uids)) == 10
@@ -126,6 +129,7 @@ def test_the_same_seed_draws_the_same_test(learner):
 def test_a_retake_draws_unseen_questions_first(learner):
     progress.mark_studied(learner, UGC7)
     ut = ut_for(UGC7)
+    Question.objects.filter(uid="ugc-mcq-u07-q14").update(status="flagged")   # one in review: 49 published
     seen = set()
     for _ in range(4):                       # 49 published: four tests of ten are all new
         a = engine.start(learner, ut)
@@ -203,8 +207,9 @@ def test_a_question_flagged_after_the_draw_is_not_scored(learner):
     assert engine.result_view(a)["voided"] == 1
 
 
-def test_the_contested_keys_can_never_be_scored(learner):
+def test_a_flagged_question_can_never_be_scored(learner):
     """Even forced into an attempt, a flagged question counts neither for nor against."""
+    Question.objects.filter(uid__in=["ugc-mcq-u05-q50", "ugc-mcq-u05-q41"]).update(status="flagged")
     progress.mark_studied(learner, "exams/ugc-net/unit5.html")
     a = engine.start(learner, ut_for("exams/ugc-net/unit5.html"))
     a.question_uids = ["ugc-mcq-u05-q50", "ugc-mcq-u05-q41"] + a.question_uids[2:]

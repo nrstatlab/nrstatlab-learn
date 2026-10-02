@@ -11,7 +11,7 @@
         {% else %}<b>No timer.</b> The paper records no official duration, so none is set.{% endif %}</li>
     <li>{% if r.scheme_recorded %}<b>+{{ r.correct|floatformat:"-2" }} for a right answer, {{ r.wrong|floatformat:"-2" }} for a wrong one</b>, nothing for a blank. From {{ r.marking_source }}.
         {% else %}<b>No marking scheme is recorded</b> for this paper, so each counted question is worth one mark and nothing is taken off for a wrong answer.{% endif %}</li>
-    {% if r.withdrawn %}<li><b>Not counted, withdrawn by the Commission:</b> {% for pq in r.withdrawn %}Q{{ pq.number }}{% if not forloop.last %}, {% endif %}{% endfor %}. They are shown, with the Commission's note.</li>{% endif %}
+    {% if r.withdrawn %}<li><b>Not counted, as no option is correct:</b> {% for pq in r.withdrawn %}Q{{ pq.number }}{% if not forloop.last %}, {% endif %}{% endfor %}. They are shown, with the Commission's note.</li>{% endif %}
     {% if r.doubtful %}<li><b>Not counted, key in doubt:</b> {% for pq in r.doubtful %}Q{{ pq.number }}{% if not forloop.last %}, {% endif %}{% endfor %}. The solved page questions their key, so they count neither for nor against you; the review says why for each.</li>{% endif %}
     <li><b>{{ r.counted }} questions count</b> towards your score.</li>
   </ul>

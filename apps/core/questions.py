@@ -10,14 +10,16 @@ Only keyed sources are read:
   bank and are never drawn for a unit test.
 * The APPSC Assistant Statistical Officer Paper-II of 2025 and of 2022, through
   the site's own generator (tools/exams/appsc_paper.py), so each question is
-  stored exactly as its solved page shows it. The key is the Commission's; the
-  "Study this" link of each question names the unit that teaches it.
+  stored exactly as its solved page shows it. The key is the right answer: the
+  Commission's unless the generator's data records another (ANSWERS), or none
+  for a question with no correct option (NO_CORRECT). The "Study this" link of
+  each question names the unit that teaches it.
 
-A question is flagged, and so never scored, when the site says its key is in
-doubt: the six keys the September 2026 audit contested (docs/AUDIT-2026-09.md
-§5, item 1), every question whose solved page carries a warning note, and the three
-the Commission withdrew. The owner can publish a flagged question in the admin
-once it is settled.
+A question is flagged, and so never scored, when its page says its key is in
+doubt (a warning note on a solved page). The owner settled every such question on
+2 October 2026 (docs/AUDIT-2026-09.md §5.1, content repository), so none is flagged
+by its source today. A question with no correct option is stored retired: never
+drawn, never scored, and out of the review queue.
 
 Unit pages were searched for practice sets with answers; there are none yet.
 """
@@ -41,17 +43,12 @@ LABELS = "ABCD"
 AUDIT = "docs/AUDIT-2026-09.md"
 KEY_CHECKED = f"Key recomputed and confirmed in the September 2026 audit ({AUDIT} §3.3, content repository)."
 COMMISSION_KEY = "Key: the Commission's own, as marked in its question paper ({pdf}, content repository)."
-
-# The six keys the audit contested (docs/AUDIT-2026-09.md §5, item 1), in its words.
-CONTESTED = {
-    (5, 50): "An exact test for p = 0.5 uses the binomial, which is option A; the key says C.",
-    (7, 14): "The random walk's E(Yt) = Y0, so B, unless the stem fixes Y0 = 0.",
-    (8, 16): "\"All of the above\" includes a false \"only\".",
-    (3, 39): "Murthy's estimator is not always better than Hansen–Hurwitz.",
-    (5, 41): "A and C are both right.",
-    (2, 45): "Sharing trace, determinant and eigenvalues does not imply similarity.",
-}
-AUDIT_FLAG = "Contested in the September 2026 audit (" + AUDIT + " §5, item 1): {}"
+SETTLED_KEY = ("Key: the right answer worked out, settled by the owner on 2 October 2026 "
+               "(" + AUDIT + " §5.1, content repository); the paper marks {mark}.")
+NO_KEY = "No option is correct (" + AUDIT + " §5.1, content repository): "
+# The six MCQs the audit contested; the owner settled each on 2 October 2026 (§5.1).
+SETTLED_MCQS = {(2, 45), (3, 39), (5, 41), (5, 50), (7, 14), (8, 16)}
+SETTLED_MCQ_LOG = "Key settled by the owner on 2 October 2026 (" + AUDIT + " §5.1, content repository)."
 PASSAGE_SPAN = 5  # a comprehension passage on the 2026 page serves the five questions after it
 UGC_2026_PAPER_I, UGC_2026_PAPER_II = "Paper I — General Paper", "Paper II — Statistics"
 
@@ -106,14 +103,13 @@ def read_ugc_mcqs(root):
                 raise ValueError(f"{UGC_MCQS} Unit {unit} Q{n}: no key letter, or not four options")
             key = key_m.group(1)
             solution = re.sub(r"^\s*[A-D]\b\.?\s*", "", inner(answer), count=1).strip()
-            contested = CONTESTED.get((unit, n))
             items.append({
                 "uid": f"ugc-mcq-u{unit:02d}-q{n:02d}", "qtype": "single", "stem_html": stem,
                 "solution_html": solution,
                 "choices": [(LABELS[i], o, LABELS[i] == key) for i, o in enumerate(options)],
                 "source": UGC_MCQS, "source_ref": f"Unit {unit} Q{n}",
-                "flag_reason": AUDIT_FLAG.format(contested) if contested else "",
-                "units": [f"exams/ugc-net/unit{unit}.html"], "recompute_log": KEY_CHECKED,
+                "flag_reason": "", "units": [f"exams/ugc-net/unit{unit}.html"],
+                "recompute_log": SETTLED_MCQ_LOG if (unit, n) in SETTLED_MCQS else KEY_CHECKED,
             })
         if n != stated:
             raise ValueError(f"{UGC_MCQS} Unit {unit}: heading says {stated} MCQs, found {n}")
@@ -185,17 +181,20 @@ def read_appsc(root):
         header, images, links, rows = gen.build(paper)
         raw = json.loads((root / "tools" / "exams" / f"appsc_paper_{year}.json").read_text(encoding="utf-8"))
         notes = {q["n"]: q.get("note", "") for q in raw["questions"]}
+        marked = {q["n"]: q["key"] for q in raw["questions"]}   # the paper's own mark, from the PDF
+        none_right = getattr(paper["data"], "NO_CORRECT", {})
         topics = paper["data"].TOPICS
         # The page's own parts (Economics, Financial Accounting, Statistics, Computers), by syllabus item.
         section_of = {item: label for _slug, label, members in paper["data"].GROUPS for item in members}
         pdf = paper["source"]
         items, pqs = [], []
         for q, item_no, topic, working, flag in rows:
-            n, key = q["n"], q["key"]
+            n, key = q["n"], q["key"]                  # the right answer, from the generator
             options = [gen.option_html(o, images, maths) for o in q["options"]]
             unit_path = topics[topic][1]
             if key is None:
-                reason = "Withdrawn by the Commission: " + html.unescape(notes[n])
+                reason = (NO_KEY + html.unescape(none_right[n]) if n in none_right
+                          else "Withdrawn by the Commission: " + html.unescape(notes[n]))
             elif flag:
                 # the note is HTML on the solved page; the reason is shown as text
                 reason = "The solved page notes: " + html.unescape(re.sub(r"<[^>]+>", "", flag))
@@ -207,10 +206,15 @@ def read_appsc(root):
                 "choices": [(str(i + 1), o, key == i + 1) for i, o in enumerate(options)],
                 "source": paper["out"], "source_ref": f"Q{n}", "flag_reason": reason,
                 "scorable": key is not None,
-                "units": [unit_path] if unit_path else [], "recompute_log": COMMISSION_KEY.format(pdf=pdf),
+                "units": [unit_path] if unit_path else [],
+                "recompute_log": (COMMISSION_KEY.format(pdf=pdf) if key == marked[n]
+                                  else SETTLED_KEY.format(mark=f"({marked[n]})" if marked[n] else "none")),
             })
-            pqs.append({"number": n, "uid": items[-1]["uid"], "official_key": str(key) if key else "",
-                        "withdrawn": key is None, "withdrawn_note": notes[n] if key is None else "",
+            # official_key: the paper's own mark, kept for the record; scoring uses the question's key
+            pqs.append({"number": n, "uid": items[-1]["uid"], "official_key": str(marked[n]) if marked[n] else "",
+                        "withdrawn": key is None,
+                        "withdrawn_note": ("No option is correct: " + html.unescape(none_right[n]) if n in none_right
+                                           else "Withdrawn by the Commission: " + notes[n]) if key is None else "",
                         "section": section_of[item_no]})
         negative = header.get("Section Negative Marks")
         out.append((f"appsc-aso-{year}-", items, int(header["Number of Questions"]), {

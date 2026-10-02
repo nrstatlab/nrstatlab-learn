@@ -8,7 +8,7 @@
   {% csrf_token %}
   <div class="tq-stem">{{ q.stem_html|safe }}</div>
   {% if q.withdrawn %}
-  <p class="tq-note"><b>Withdrawn by the Commission.</b> {{ q.withdrawn_note }}</p>
+  <p class="tq-note"><b>No answer.</b> {{ q.withdrawn_note }}</p>
   <ol class="tq-plain">{% for o in q.options %}<li><span class="tq-letter">{{ o.display }}</span> <span class="tq-text">{{ o.text_html|safe }}</span></li>{% endfor %}</ol>
   {% else %}
   <ul class="tq-options">

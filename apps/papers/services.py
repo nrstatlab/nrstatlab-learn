@@ -133,7 +133,7 @@ def _numbers(sitting):
 
 def view(sitting):
     """The paper as the page shows it: each question with its printed number, section and,
-    for a withdrawn one, the Commission's note. No key, no working."""
+    for one that is not counted, why. No key, no working."""
     pqs = {pq.number: pq for pq in sitting.paper.questions.all()}
     out = []
     for item, number in zip(assessments.public_view(sitting.attempt), _numbers(sitting), strict=True):
@@ -193,7 +193,7 @@ def submit(sitting):
     for mark, number in zip(assessments.grade(sitting.attempt), numbers, strict=True):
         pq = pqs[number]
         if pq.withdrawn:
-            not_counted[str(number)] = "Withdrawn by the Commission: " + pq.withdrawn_note
+            not_counted[str(number)] = pq.withdrawn_note
             continue
         if not mark["counts"]:
             not_counted[str(number)] = pq.question.flag_reason or "Its key is in doubt."

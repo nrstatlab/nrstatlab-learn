@@ -253,7 +253,7 @@ def test_sit_the_appsc_2025_paper_from_its_solved_page(page, site, learner):
     page.wait_for_timeout(1500)
     assert first != clock.inner_text() and "left" in clock.inner_text()
     q134 = page.locator("#q134")
-    assert q134.locator("input").count() == 0 and "Withdrawn by the Commission" in q134.inner_text()
+    assert q134.locator("input").count() == 0 and "No option is correct" in q134.inner_text()
     s = PaperAttempt.objects.get(attempt__user=learner)
     for n in (1, 2, 3, 4, 5):                       # all five are counted questions, answered right
         with page.expect_response(lambda r: r.url.endswith("/answer")):
@@ -263,7 +263,7 @@ def test_sit_the_appsc_2025_paper_from_its_solved_page(page, site, learner):
     page.once("dialog", lambda d: d.accept())
     page.get_by_role("button", name="Submit the paper").click()
     page.wait_for_url(f"{site}/papers/attempt/{s.attempt_id}/review")
-    assert "5.00 of 140.00" in page.locator(".tr-summary").inner_text()
+    assert "5.00 of 149.00" in page.locator(".tr-summary").inner_text()
     assert "not counted" in page.locator("#q134").inner_text()
 
 

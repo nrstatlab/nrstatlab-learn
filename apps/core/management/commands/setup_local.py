@@ -56,7 +56,7 @@ class Command(BaseCommand):
                 progress.mark_studied(user, page)
             assessments.sit_test(user, STUDIED[0], right=3)       # 30%: not a pass
             assessments.sit_test(user, STUDIED[1], right=10)      # 100%: the unit is passed
-            papers.sit_paper(user, "appsc-aso-2025-paper-ii", right=90, wrong=30)   # 80.10 of 140.00
+            papers.sit_paper(user, "appsc-aso-2025-paper-ii", right=90, wrong=30)   # 80.10 of 149.00
             examinations.set_target(user, examinations.exam_by_slug("ugc-net"))     # the dashboard card
         self.stdout.write(self.style.SUCCESS(
             "\nReady. Open http://localhost:8000\n"

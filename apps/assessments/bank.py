@@ -25,8 +25,8 @@ def check_item(item):
     labels = [c[0] for c in choices]
     if len(set(labels)) != len(labels):
         raise BankError(f"{uid}: repeated option labels {labels}")
-    if item.get("flag_reason") and not item.get("scorable", True):
-        return  # withdrawn: there is no key to check
+    if not item.get("scorable", True):
+        return  # withdrawn, or no option is correct: there is no key to check
     correct = [c[0] for c in choices if c[2]]
     if qtype in (Question.SINGLE, Question.ASSERTION):
         if len(correct) != 1:
@@ -56,9 +56,10 @@ def store_questions(items, *, prefix):
     solution_html, choices [(label, html, is_correct, side)], answer_text, tolerance,
     source, source_ref, flag_reason, units [page ids], recompute_log.
 
-    A question is published, or flagged when the source gives a reason; its status is
-    set only when it is new or its content changed. Questions of this source (uid
-    prefix) that the source no longer has are retired, never deleted.
+    A question is published, or flagged when the source gives a reason, or retired
+    when it cannot be scored (withdrawn, or no option is correct); its status is set
+    only when it is new or its content changed. Questions of this source (uid prefix)
+    that the source no longer has are retired, never deleted.
     Returns {"created", "updated", "unchanged", "retired"}."""
     for item in items:
         check_item(item)
@@ -77,13 +78,16 @@ def store_questions(items, *, prefix):
         fields = {k: item.get(k, "") for k in ("qtype", "stem_html", "solution_html", "answer_text", "source",
                                               "source_ref", "flag_reason", "recompute_log")}
         fields["tolerance"] = item.get("tolerance")
-        status = Question.FLAGGED if item.get("flag_reason") else Question.PUBLISHED
+        if not item.get("scorable", True):
+            status = Question.RETIRED
+        else:
+            status = Question.FLAGGED if item.get("flag_reason") else Question.PUBLISHED
         if q is None:
             q = Question.objects.create(uid=item["uid"], status=status, source_hash=h, **fields)
             counts["created"] += 1
             events.append(QuestionEvent(question=q, action=QuestionEvent.IMPORTED, to_status=status,
                                         note=fields["flag_reason"]))
-        elif q.source_hash != h or q.status == Question.RETIRED:
+        elif q.source_hash != h or (q.status == Question.RETIRED and status != Question.RETIRED):
             events.append(QuestionEvent(question=q, action=QuestionEvent.SOURCE_CHANGED, from_status=q.status,
                                         to_status=status, note=fields["flag_reason"],
                                         changes={k: [str(getattr(q, k)), str(v)] for k, v in fields.items()

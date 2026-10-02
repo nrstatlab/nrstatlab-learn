@@ -7,7 +7,7 @@
 <div class="app-card tr-summary">
   <p class="tr-score"><b>{{ r.score }} of {{ r.max_score }}</b> ({{ r.percent|floatformat:0 }}%)</p>
   <p class="app-quiet">{% if r.rules.scheme_recorded %}+{{ r.rules.correct|floatformat:"-2" }} for each right answer, {{ r.rules.wrong|floatformat:"-2" }} for each wrong one, nothing for a blank, as the paper's header records.{% else %}No marking scheme is recorded for this paper: each counted question is one mark, and nothing is taken off.{% endif %}</p>
-  {% if r.not_counted %}<p>{{ r.not_counted }} question{{ r.not_counted|pluralize }} did not count: withdrawn by the Commission, or with a key in doubt. Each says why below.</p>{% endif %}
+  {% if r.not_counted %}<p>{{ r.not_counted }} question{{ r.not_counted|pluralize }} did not count: no option is correct, or the key is in review. Each says why below.</p>{% endif %}
 </div>
 <h2>By section</h2>
 <div class="scroll"><table class="app-tests review-sections">
@@ -23,7 +23,7 @@
     {% for o in q.options %}
     <li class="{% if o.key %}is-key{% endif %}{% if o.chosen %} is-chosen{% endif %}"><span class="tq-letter">{{ o.display }}</span>
       <span class="tq-text">{{ o.text_html|safe }}</span>
-      {% if o.key %}<span class="tr-tag">the official key</span>{% endif %}{% if o.chosen %}<span class="tr-tag tr-yours">your answer</span>{% endif %}</li>
+      {% if o.key %}<span class="tr-tag">the right answer</span>{% endif %}{% if o.chosen %}<span class="tr-tag tr-yours">your answer</span>{% endif %}</li>
     {% endfor %}
   </ul>
   {% if q.reason %}<p class="tq-note"><b>Not counted.</b> {{ q.reason }}</p>{% endif %}
