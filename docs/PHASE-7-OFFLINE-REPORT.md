@@ -113,6 +113,54 @@ anyone else, so an id reveals nothing, not even that it exists.
   Its one incompatible change is in the Bitbucket and Pinterest providers, which are not used here.
   Upgraded from 65.19.4; the full suite, the checks and `pip-audit` pass again.
 
+## After the phase: the review queue closed (2 October 2026)
+
+The owner reviewed all 37 questions the app held back from scoring. The rule given was to take the
+right option among those printed, whatever the Commission's key says, with a genuine explanation.
+The decisions, question by question, are in the content repository's `docs/AUDIT-2026-09.md` §5.1.
+
+**The answers:**
+- **8 answers changed:**
+  - UGC NET MCQs: Unit 3 Q39 B, Unit 5 Q50 A, Unit 7 Q14 B, Unit 8 Q16 A;
+  - APPSC 2025: Q143 2;
+  - APPSC 2022: Q10 1, Q127 1, Q138 4.
+- **2 questions the Commission withdrew are answered:** 2022 Q51 (2) and Q81 (1). They now count
+  everywhere, timed exam included.
+- **APPSC 2025 Q134 has no correct option** (r ± PE gives 0.769 and 0.631). It is stored retired, so
+  it is never drawn and never scored, and the paper shows "Not counted. No option is correct".
+- **26 answers stand.** Every warning note on the solved pages is folded into a working that stands
+  on its own, and the pages no longer mention the old keys.
+
+**What changed in the app:**
+- `apps/core/questions.py` no longer hard-codes the contested six. APPSC questions take the right
+  answer from the generator (`ANSWERS`, `NO_CORRECT` in its data files). A question with no correct
+  option carries `scorable: False`. `official_key` keeps the paper's own mark, for the record.
+- `apps/assessments/bank.py` stores a question that cannot be scored as retired. It no longer
+  re-imports a retired question on every run.
+- **The paper pages say "Not counted"**, with the reason, where they said "Withdrawn by the
+  Commission". The review tags the right answer as "the right answer", not "the official key".
+- **The content submodule** points at the content commit that settles the answers.
+
+**What follows from it:**
+- No question imports as flagged; the review queue holds only what reviewers or the statistics put
+  there.
+- APPSC 2025 counts 149 questions, APPSC 2022 and UGC NET June 2026 all 150.
+- The settled answers gave Applied Statistics Unit 3 its tenth published question, so **20 units
+  have a unit test**.
+- The readiness ceilings rise for APPSC (35.6% → 41.8%) and ISS (7.7% → 9.5%).
+
+**Checks:**
+
+| Check | Result |
+|---|---|
+| pytest | **235 passed**, coverage 96%: six new tests for the settled answers, three retired with the contested and flagged sets they checked, and the expectations the change moves updated |
+| Mutation checks | **4 of 4 caught**: the settled answers ignored; a question with no correct option imported as published; a retired question re-imported on every run; the no-correct-option note dropped |
+| The content rechecks | Both pages held to their PDFs with exactly the recorded exceptions: 1,050 and 896 checks, 0 failures. A changed answer the page does not show is caught |
+| The changed checks of `LOCAL-CHECK.md`, walked in Chromium against a fresh `setup_local` database | **20 of 20 pass**: 3.8, 3.9, 4.2–4.8, 6.1–6.8 and the four demo sign-ins. The full 55-check walk script was lost when the container restarted, so the rest was not re-walked; the full test suite, the browser tests included, covers it |
+| MathJax on the four changed pages, served offline by the app | 6,300 formulas, 0 errors |
+| ruff, `check`, `check --deploy`, migrations, both import dry runs, `pip-audit` | clean |
+| The content repository's checks and contrast | all pass |
+
 ## For the owner
 
 1. **Walk 7.1 and 7.2** in `docs/LOCAL-CHECK.md`: formulas with Wi-Fi off, and a backup and restore.

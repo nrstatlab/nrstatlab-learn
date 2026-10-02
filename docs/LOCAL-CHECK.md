@@ -40,7 +40,7 @@ docker compose up --build
 | `owner@localhost` | You, as staff and a reviewer: the admin at http://localhost:8000/staff/ |
 | `reviewer@localhost` (Kavya) | A second reviewer (staff, not an administrator), for the two-person rule |
 | `new.learner@localhost` (Meera) | A learner who has done nothing yet |
-| `progress.learner@localhost` (Arjun) | A learner with progress: Descriptive Statistics Unit 3 studied and its test failed (30%); UGC NET Unit 7 studied and its test passed (100%); the APPSC 2025 paper sat as an exam (80.10 of 140); preparing for UGC NET |
+| `progress.learner@localhost` (Arjun) | A learner with progress: Descriptive Statistics Unit 3 studied and its test failed (30%); UGC NET Unit 7 studied and its test passed (100%); the APPSC 2025 paper sat as an exam (80.10 of 149); preparing for UGC NET |
 
 **Emails.** Sign-up and password reset emails are not sent anywhere. They are printed in the window
 where `docker compose up` runs. If you started it with `-d`, run `docker compose logs web` to see
@@ -141,15 +141,14 @@ A tip: use a private (incognito) window as a second browser, or as a second lear
 - [ ] **3.7 A unit without enough questions has no test.** Descriptive Statistics Unit 5
   (http://localhost:8000/statistics/descriptive-statistics/unit5.html) has no test box.
 - [ ] **3.8 Flagged questions are never asked.** In the admin (http://localhost:8000/staff/, as
-  `owner@localhost`), open **Questions** and filter by status **flagged**. You see 37 questions,
-  each with its reason. They are the ones whose key is in doubt, and none of them appears in any
-  test.
-- [ ] **3.9 You decide.** Since Phase 6, a question is published only from **Questions in the review
-  queue** (in the admin, under Assessments). Open one of those questions there and press **Approve and publish**.
-  It can now be drawn in its unit's test.
-
-  For example, UGC NET Unit 5 Q50, once you have settled its key. The solved-paper flags are listed
-  in `docs/PHASE-3-REPORT.md`, "For the owner", sorted into printing-only and arguable keys.
+  `owner@localhost`), open **Questions** and filter by status **flagged**: there are none, since you
+  settled all 37 on 2 October 2026. Filter by **retired**: APPSC 2025 Q134 (`appsc-aso-2025-q134`) is
+  there, as no option is correct, so it is never asked. Now put one in review yourself: open
+  `ugc-mcq-u05-q50`, set its status to **flagged**, and save. It is now in **Questions in the review
+  queue**, and it no longer appears in the UGC NET Unit 5 test.
+- [ ] **3.9 You decide.** A question is published only from **Questions in the review queue** (in the
+  admin, under Assessments). Open `ugc-mcq-u05-q50` there and press **Approve and publish**. It leaves
+  the queue and can be drawn in its unit's test again.
 - [ ] **3.10 In the dark.** With your computer set to dark mode, the test and result pages are
   readable.
 - [ ] **3.11 On a phone-sized window.** Narrow the browser window to about the width of a phone. The
@@ -172,10 +171,10 @@ own rules. Sign in as `new.learner@localhost` unless a check says otherwise.
   - the marking, and where it comes from;
   - the questions that do not count, and why.
 
-  APPSC 2025: 150 minutes, +1 and −0.33, Q134 withdrawn, 9 keys in doubt, **140 count**. APPSC 2022:
-  Q51 and Q81 withdrawn, 12 keys in doubt, **136 count**.
+  APPSC 2025: 150 minutes, +1 and −0.33, Q134 not counted as no option is correct, **149 count**.
+  APPSC 2022: 150 minutes, +1 and −0.33, **all 150 count**.
 - [ ] **4.3 UGC NET 2026 has no timer and no negative marks.** Its page says the paper records
-  neither, so there is no clock, each question is one mark, and 143 count.
+  neither, so there is no clock, each question is one mark, and all 150 count.
 - [ ] **4.4 Practise.** On the UGC NET 2026 page press **Practise**. Choose an answer and press
   **Check my answer**: it says right or not, shows the key and the working, and "Study this" where
   the site teaches it. On another question, **Show the solution** shows the same without
@@ -186,17 +185,17 @@ own rules. Sign in as `new.learner@localhost` unless a check says otherwise.
   one page, in its sections, with a bar that stays in view: "N of 149 answered" and the time left,
   counting down. **Questions** opens a grid of numbers; answered ones turn solid. Reload the page:
   your answers and the clock are unchanged.
-- [ ] **4.7 A withdrawn question.** Q134 is greyed, with the Commission's note, and has nothing to
-  choose.
+- [ ] **4.7 A question with no correct option.** Q134 is greyed, says "Not counted. No option is
+  correct", with why, and has nothing to choose.
 - [ ] **4.8 Submit and review.** Answer a few, then **Submit the paper** (it asks first if some are
   blank). The review shows:
-  - the score out of 140, with 0.33 taken off for each wrong answer;
+  - the score out of 149, with 0.33 taken off for each wrong answer;
   - a table by section: right, wrong, blank, not counted, marks;
-  - "10 questions did not count", and each of them says why;
-  - every question with your answer, the official key, the working and "Study this".
+  - "1 question did not count" (Q134), and why;
+  - every question with your answer, the right answer, the working and "Study this".
 
   Signed in as `progress.learner@localhost`, the review of the sitting already there reads
-  **80.10 of 140.00**: 90 right, 30 wrong.
+  **80.10 of 149.00**: 90 right, 30 wrong.
 - [ ] **4.9 The dashboard** lists the papers you have sat under "Old papers", each score linking to
   its review, and a paper sat counts towards the day streak.
 - [ ] **4.10 In the dark and on a phone.** In dark mode, and in a phone-sized window, the paper
@@ -207,7 +206,7 @@ own rules. Sign in as `new.learner@localhost` unless a check says otherwise.
 
 Readiness is worked out from each exam's syllabus map on the site. Every line of the map is shown with
 the units that teach it, and only units you have **passed** (by passing their unit test) count. Only
-19 units have a test so far, so each exam also shows the most you can reach today.
+20 units have a test so far, so each exam also shows the most you can reach today.
 
 - [ ] **5.1 The box on an exam's map.** Signed out, open the UGC NET map
   (http://localhost:8000/exams/ugc-net/index.html). Under the bar, a box says "How ready are you?"
@@ -268,14 +267,15 @@ question planted to behave badly.
 - [ ] **6.5 No one approves their own question.** Open `local-demo-draft-001`, a draft written by
   `owner@localhost`. It says "You wrote this question", and **Approve and publish** is off. Sign in to
   the admin as `reviewer@localhost` in a private window and approve it there: it is published.
-- [ ] **6.6 Send back needs a note.** Open another flagged question and press **Send back** with the
-  note empty: it asks for a note. Write one and send it back. The question becomes a draft, and the
-  queue shows "Sent back:" with your note.
+- [ ] **6.6 Send back needs a note.** Put another question in review as in 3.8: in the plain
+  **Questions** list open `ugc-mcq-u05-q41`, set its status to **flagged**, and save. Open it in the
+  review queue and press **Send back** with the note empty: it asks for a note. Write one and send it
+  back. The question becomes a draft, and the queue shows "Sent back:" with your note.
 - [ ] **6.7 Approved means approved.** Run `item_stats` again. `ugc-mcq-u01-q10` is not flagged
   again: it would be only after 30 more responses.
-- [ ] **6.8 Publishing only through the queue.** In the admin's plain **Questions** list, open a
-  flagged question, set its status to **published** and save. It is refused, and points you to the
-  review queue.
+- [ ] **6.8 Publishing only through the queue.** In the admin's plain **Questions** list, open
+  `ugc-mcq-u05-q41` (the draft from 6.6), set its status to **published** and save. It is refused, and
+  points you to the review queue.
 
 ### Before launch: the offline part of Phase 7
 
