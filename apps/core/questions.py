@@ -4,6 +4,10 @@ Only keyed sources are read:
 
 * exams/ugc-net/mcqs.html: 500 MCQs in ten units of 50. The key is the first
   letter of the answer paragraph; anything after it is the explanation.
+* exams/ugc-net/paper-1/mcqs.html: UGC NET Paper I's model MCQs, twenty a unit,
+  in the same form. A passage (div.comp) says how many questions it serves. Only
+  the units whose heading carries the owner's approval date (data-approved) are
+  read; the rest wait, and are never stored or scored.
 * exams/ugc-net/solved-2026.html: the June 2026 paper, 150 questions, key in
   "Answer: (D) ...". Four comprehension passages each serve the five questions
   after them. The page ties no question to a unit, so these stay in the exam
@@ -38,6 +42,10 @@ from bs4 import BeautifulSoup
 from .importer import _load
 
 UGC_MCQS = "exams/ugc-net/mcqs.html"
+UGC_P1_DIR = "exams/ugc-net/paper-1"
+UGC_P1_MCQS = UGC_P1_DIR + "/mcqs.html"
+P1_LOG = ("Drafted, key rechecked by tools/exams/recheck_ugc_paper1.py (content repository); "
+          "approved by the owner on {date}.")
 UGC_2026 = "exams/ugc-net/solved-2026.html"
 LABELS = "ABCD"
 AUDIT = "docs/AUDIT-2026-09.md"
@@ -60,6 +68,7 @@ class Bank:
     sources: dict = field(default_factory=dict)   # uid prefix -> list of items
     papers: list = field(default_factory=list)
     expected: dict = field(default_factory=dict)  # uid prefix -> count the source itself states
+    held_back: dict = field(default_factory=dict)  # uid prefix -> units not yet approved, so not read
 
     def count(self, prefix):
         return len(self.sources[prefix])
@@ -75,45 +84,82 @@ def _soup(root, rel):
 
 # ---------------------------------------------------------------- UGC NET MCQs
 
-def read_ugc_mcqs(root):
-    soup = _soup(root, UGC_MCQS)
-    items, seen_units = [], []
+def _read_unit_mcqs(root, rel, *, uid_prefix, unit_dir, log, approved_only=False):
+    """The MCQ page at rel: units headed "Unit N — Title (k MCQs)", each followed by its
+    questions. A passage (div.comp data-questions="k") is put before the stems of the k
+    questions after it. With approved_only, a unit whose heading has no data-approved
+    date is skipped whole (the owner has not approved it), and so is never stored.
+    log(unit, n, approved) gives each question's recompute log.
+    Returns (items, the count the read units' headings state, [skipped units])."""
+    soup = _soup(root, rel)
+    items, seen_units, skipped = [], [], []
     for h in soup.select("h2"):
         m = re.match(r"Unit (\d+) — .*\((\d+) MCQs\)", h.get_text(" ", strip=True))
         if not m:
             continue
         unit, stated = int(m.group(1)), int(m.group(2))
+        approved = h.get("data-approved", "")
+        if approved_only and not approved:
+            skipped.append(unit)
+            continue
         seen_units.append((unit, stated))
-        n = 0
+        n, passage, left = 0, "", 0
         for el in h.find_all_next(["h2", "div"]):
             if el.name == "h2":
                 break
-            if "mcq" not in (el.get("class") or []):
+            classes = el.get("class") or []
+            if "comp" in classes:
+                passage, left = str(el), int(el.get("data-questions", "0"))
+                if left < 1:
+                    raise ValueError(f"{rel} Unit {unit}: a passage that says it serves no questions")
+                continue
+            if "mcq" not in classes:
                 continue
             n += 1
             q = el.select_one("div.q")
             num = re.match(r"\s*(\d+)\.\s*", q.get_text())
             if not num or int(num.group(1)) != n:
-                raise ValueError(f"{UGC_MCQS} Unit {unit}: question {n} is numbered {num and num.group(1)}")
+                raise ValueError(f"{rel} Unit {unit}: question {n} is numbered {num and num.group(1)}")
             stem = re.sub(r"^\s*\d+\.\s*", "", inner(q), count=1)
+            if left:
+                stem, left = passage + stem, left - 1
             options = [inner(li) for li in el.select("ol.options > li")]
             answer = el.select_one("details p")
             key_m = re.match(r"\s*([A-D])\b\.?\s*", answer.get_text())
             if not key_m or len(options) != 4:
-                raise ValueError(f"{UGC_MCQS} Unit {unit} Q{n}: no key letter, or not four options")
+                raise ValueError(f"{rel} Unit {unit} Q{n}: no key letter, or not four options")
             key = key_m.group(1)
             solution = re.sub(r"^\s*[A-D]\b\.?\s*", "", inner(answer), count=1).strip()
             items.append({
-                "uid": f"ugc-mcq-u{unit:02d}-q{n:02d}", "qtype": "single", "stem_html": stem,
+                "uid": f"{uid_prefix}-u{unit:02d}-q{n:02d}", "qtype": "single", "stem_html": stem,
                 "solution_html": solution,
                 "choices": [(LABELS[i], o, LABELS[i] == key) for i, o in enumerate(options)],
-                "source": UGC_MCQS, "source_ref": f"Unit {unit} Q{n}",
-                "flag_reason": "", "units": [f"exams/ugc-net/unit{unit}.html"],
-                "recompute_log": SETTLED_MCQ_LOG if (unit, n) in SETTLED_MCQS else KEY_CHECKED,
+                "source": rel, "source_ref": f"Unit {unit} Q{n}",
+                "flag_reason": "", "units": [f"{unit_dir}/unit{unit}.html"],
+                "recompute_log": log(unit, n, approved),
             })
+        if left:
+            raise ValueError(f"{rel} Unit {unit}: a passage is owed {left} more questions")
         if n != stated:
-            raise ValueError(f"{UGC_MCQS} Unit {unit}: heading says {stated} MCQs, found {n}")
-    return items, sum(s for _, s in seen_units)
+            raise ValueError(f"{rel} Unit {unit}: heading says {stated} MCQs, found {n}")
+    return items, sum(s for _, s in seen_units), skipped
+
+
+def read_ugc_mcqs(root):
+    items, stated, _ = _read_unit_mcqs(
+        root, UGC_MCQS, uid_prefix="ugc-mcq", unit_dir="exams/ugc-net",
+        log=lambda unit, n, _: SETTLED_MCQ_LOG if (unit, n) in SETTLED_MCQS else KEY_CHECKED)
+    return items, stated
+
+
+def read_ugc_paper1_mcqs(root):
+    """UGC NET Paper I's model MCQs: only the units the owner has approved (each unit's
+    heading carries the date). Returns (items, stated, skipped units); none at all when
+    the content has no Paper I page yet."""
+    if not (Path(root) / UGC_P1_MCQS).exists():
+        return [], 0, []
+    return _read_unit_mcqs(root, UGC_P1_MCQS, uid_prefix="ugc-p1-mcq", unit_dir=UGC_P1_DIR,
+                           log=lambda unit, n, approved: P1_LOG.format(date=approved), approved_only=True)
 
 
 # ---------------------------------------------------------------- UGC NET June 2026 paper
@@ -237,6 +283,8 @@ def read_bank(root) -> Bank:
     bank.sources["ugc-mcq-"], bank.expected["ugc-mcq-"] = items, stated
     items, stated, paper = read_ugc_2026(root)
     bank.sources["ugc-2026-"], bank.expected["ugc-2026-"] = items, stated
+    items, stated, bank.held_back["ugc-p1-mcq-"] = read_ugc_paper1_mcqs(root)
+    bank.sources["ugc-p1-mcq-"], bank.expected["ugc-p1-mcq-"] = items, stated
     bank.papers.append(paper)
     for prefix, items, stated, paper in read_appsc(root):
         bank.sources[prefix], bank.expected[prefix] = items, stated

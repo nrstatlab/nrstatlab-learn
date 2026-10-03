@@ -29,6 +29,10 @@ class Command(BaseCommand):
             linked = sum(1 for i in items if i["units"])
             self.stdout.write(f"read {prefix}: {len(items)} questions (as the source states), "
                               f"{flagged} flagged, {unscorable} never scored, {linked} linked to a unit")
+        for prefix, units in bank.held_back.items():
+            if units:
+                self.stdout.write(f"{prefix}: units {', '.join(map(str, units))} wait for the owner's approval, "
+                                  f"so they are not read")
         if dry_run:
             self.stdout.write("dry run: nothing written")
             return

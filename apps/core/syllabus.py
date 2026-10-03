@@ -28,8 +28,9 @@ from .importer import _load
 
 EXAMS = ["ugc-net", "csir-net", "asrb-net", "iss", "appsc"]
 # The pages of each exam that are its syllabus map (the readiness box goes on them).
+PAPER1 = "exams/ugc-net/paper-1"
 MAP_PAGES = {
-    "ugc-net": ["exams/ugc-net/index.html"],
+    "ugc-net": ["exams/ugc-net/index.html", PAPER1 + "/index.html"],
     "csir-net": ["exams/csir-net/index.html"],
     "asrb-net": ["exams/asrb-net/index.html"],
     "iss": ["exams/iss/index.html"] + [f"exams/iss/paper{p}.html" for p in (1, 2, 3, 4)],
@@ -127,6 +128,25 @@ def read_ugc(root, resolve):
                 links.append((resolve("exams/ugc-net", path), depth))
             items.append(_item(gen.esc(line), grade, links))
         groups.append({"code": f"U{roman}", "title": f"Unit {roman}: {gen.esc(title)}", "items": items})
+    return groups + read_ugc_paper1(root, resolve)
+
+
+def read_ugc_paper1(root, resolve):
+    """UGC NET Paper I, through its own generator (ugc_paper1_map.py): ten more groups,
+    coded P1-UI to P1-UX, after the Statistics paper's. None while the content has no
+    Paper I map. Graded as the Statistics map is: the Paper I unit's section is brief,
+    a checked course unit deep."""
+    if not (Path(root) / "tools" / "exams" / "ugc_paper1_map.py").exists():
+        return []
+    gen = _generator(root, "ugc_paper1_map")
+    groups = []
+    for roman, title, rows in gen.build_rows():
+        items = []
+        for line, dests, grade in rows:
+            links = [(resolve(PAPER1, path), "brief" if re.match(r"unit\d+\.html#", path) else "deep")
+                     for path, _label in dests]
+            items.append(_item(gen.esc(line), grade, links))
+        groups.append({"code": f"P1-U{roman}", "title": f"Paper I, Unit {roman}: {gen.esc(title)}", "items": items})
     return groups
 
 
