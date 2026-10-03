@@ -27,8 +27,8 @@ cd nrstatlab-learn
 docker compose up --build
 ```
 
-- **The first start takes a few minutes.** It builds the app, then prepares the database: all 693
-  pages of the site, the 950 questions and four demo accounts.
+- **The first start takes a few minutes.** It builds the app, then prepares the database: all 705
+  pages of the site, the 1,150 questions and four demo accounts.
 - **When the window shows `Ready. Open http://localhost:8000`,** open
   **http://localhost:8000** in your browser.
 - **Keep that window open.** It is also where emails appear (below).
@@ -206,7 +206,7 @@ own rules. Sign in as `new.learner@localhost` unless a check says otherwise.
 
 Readiness is worked out from each exam's syllabus map on the site. Every line of the map is shown with
 the units that teach it, and only units you have **passed** (by passing their unit test) count. Only
-20 units have a test so far, so each exam also shows the most you can reach today.
+30 units have a test so far, so each exam also shows the most you can reach today.
 
 - [ ] **5.1 The box on an exam's map.** Signed out, open the UGC NET map
   (http://localhost:8000/exams/ugc-net/index.html). Under the bar, a box says "How ready are you?"
@@ -235,7 +235,7 @@ the units that teach it, and only units you have **passed** (by passing their un
 - [ ] **5.8 In the dark and on a phone.** In dark mode and in a phone-sized window, the readiness pages
   and the box are readable and nothing needs scrolling sideways.
 
-### Phase 6: the quality loop
+### Phase 6: the quality loop (approved 3 October 2026)
 
 Each night, the live platform will work out two figures for every question with 30 or more answers,
 from unit tests and exam-mode papers:
@@ -277,7 +277,7 @@ question planted to behave badly.
   `ugc-mcq-u05-q41` (the draft from 6.6), set its status to **published** and save. It is refused, and
   points you to the review queue.
 
-### Before launch: the offline part of Phase 7
+### Before launch: the offline part of Phase 7 (approved 3 October 2026)
 
 - [ ] **7.1 Formulas draw with Wi-Fi off.** Turn Wi-Fi off, or pull the network cable. Open
   http://localhost:8000/statistics/descriptive-statistics/unit3.html and scroll: every formula is

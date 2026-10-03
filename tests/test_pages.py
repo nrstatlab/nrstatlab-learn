@@ -38,7 +38,7 @@ def test_every_indexed_page_is_served_byte_for_byte(visitor, source):
         if status != 200 or body != expected_html(source, rel):
             wrong.append((rel, status))
     assert not wrong, f"{len(wrong)} of {len(source.indexed)} pages differ, e.g. {wrong[:5]}"
-    assert len(source.indexed) == 675
+    assert len(source.indexed) == 687   # 675, and UGC NET Paper I's 12 pages
 
 
 def test_every_other_page_is_still_served(visitor, source):

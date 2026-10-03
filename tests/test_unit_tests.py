@@ -91,10 +91,12 @@ def test_a_unit_needs_enough_published_questions(learner):
         engine.start(learner, thin)
 
 
-def test_twenty_unit_tests_are_open_today():
-    """Nineteen until 2 October 2026, when the settled answers gave Applied Statistics Unit 3 its tenth."""
+def test_thirty_unit_tests_are_open_today():
+    """Nineteen until 2 October 2026, when the settled answers gave Applied Statistics Unit 3 its tenth;
+    thirty from 3 October, when the owner approved the ten units of UGC NET Paper I."""
     open_ = [ut.unit.legacy_path for ut in UnitTest.objects.select_related("unit") if engine.test_for_unit(ut.unit)]
-    assert len(open_) == 20 and all(f"exams/ugc-net/unit{i}.html" in open_ for i in range(1, 11))
+    assert len(open_) == 30 and all(f"exams/ugc-net/unit{i}.html" in open_ for i in range(1, 11))
+    assert all(f"exams/ugc-net/paper-1/unit{i}.html" in open_ for i in range(1, 11))
     assert "statistics/applied-statistics/unit3.html" in open_
 
 

@@ -1,6 +1,6 @@
 # Phase 7 report, the offline part: ready for launch, on the computer
 
-**Status:** done, awaiting review. **Date:** 29 September 2026.
+**Status:** done; approved by the owner on 3 October 2026. **Date:** 29 September 2026.
 
 The owner chose to build now everything for launch that can be built and checked on a computer.
 **Nothing is online:**

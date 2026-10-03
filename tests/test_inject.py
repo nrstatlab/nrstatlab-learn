@@ -20,7 +20,7 @@ def state_of(body):
 
 def test_every_page_with_the_site_bar_has_one_account_link(client, source):
     with_bar = [rel for rel, html in source.pages.items() if inject.NAV in html]
-    assert len(with_bar) == 676
+    assert len(with_bar) == 688   # 676, and UGC NET Paper I's 12 pages
     wrong = []
     for rel in with_bar:
         body = client.get("/" + rel).content.decode()

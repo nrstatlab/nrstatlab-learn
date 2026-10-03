@@ -127,7 +127,8 @@ def test_the_next_units_serve_the_most_lines_then_follow_course_order():
 
 def test_the_five_maps_are_stored_at_the_counts_they_hold():
     assert examinations.syllabus_counts() == {
-        "ugc-net": {"items": 130, "with a unit": 130, "page only": 0, "not here": 0},
+        "ugc-net": {"items": 201, "with a unit": 201,   # 130, and Paper I's 71
+                    "page only": 0, "not here": 0},
         "csir-net": {"items": 52, "with a unit": 39, "page only": 4, "not here": 9},
         "asrb-net": {"items": 99, "with a unit": 73, "page only": 3, "not here": 23},
         "iss": {"items": 147, "with a unit": 112, "page only": 9, "not here": 26},
@@ -156,7 +157,7 @@ def test_an_old_address_is_followed_to_its_unit(source):
 
 def test_importing_again_changes_nothing(source):
     counts = examinations.store_syllabus(source.syllabus)
-    assert counts == {"created": 0, "updated": 0, "unchanged": 501, "deleted": 0}
+    assert counts == {"created": 0, "updated": 0, "unchanged": 572, "deleted": 0}
 
 
 def test_an_item_the_map_drops_is_removed(source):

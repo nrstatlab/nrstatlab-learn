@@ -1,6 +1,6 @@
 # Phase 6 report: The quality loop
 
-**Status:** done, awaiting review. **Date:** 29 September 2026.
+**Status:** done; approved by the owner on 3 October 2026. **Date:** 29 September 2026.
 
 Everything here runs on a computer only. Nothing is online until the owner signs off
 `docs/LOCAL-CHECK.md`, which now has a Phase 6 section (checks 6.1–6.8).

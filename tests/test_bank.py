@@ -12,7 +12,8 @@ from apps.assessments.models import Question, QuestionUnit, UnitTest
 from apps.papers.models import PaperQuestion, SolvedPaper
 
 pytestmark = pytest.mark.django_db
-SOURCES = {"ugc-mcq-": 500, "ugc-2026-": 150, "appsc-aso-2025-": 150, "appsc-aso-2022-": 150}
+SOURCES = {"ugc-mcq-": 500, "ugc-2026-": 150, "ugc-p1-mcq-": 200,   # Paper I, approved 3 October 2026
+           "appsc-aso-2025-": 150, "appsc-aso-2022-": 150}
 NEVER_SCORED = {"appsc-aso-2025-": 1}          # Q134: no option is correct
 # The answers the owner settled on 2 October 2026 (docs/AUDIT-2026-09.md §5.1, content repository)
 # where they are not the old key, and the two withdrawn 2022 questions now answered.

@@ -37,11 +37,11 @@ def test_stub_targets_resolve(stub, url, target):
 def test_import_is_idempotent_and_complete(source):
     counts = importer.write_database(source)
     assert counts == {"created": 0, "updated": 0, "unchanged": len(source.pages), "deleted": 0,
-                      "syllabus": {"created": 0, "updated": 0, "unchanged": 501, "deleted": 0}}
+                      "syllabus": {"created": 0, "updated": 0, "unchanged": 572, "deleted": 0}}
     stored = importer.verify_database(source)
-    assert stored["syllabus items"] == 501
-    assert stored["markable units"] == len(source.markable) == 310
-    assert stored["courses"] == 56 and stored["exams"] == 5
+    assert stored["syllabus items"] == 572   # 501, and UGC NET Paper I's 71 lines
+    assert stored["markable units"] == len(source.markable) == 321   # 310, and Paper I's 10 units and MCQs
+    assert stored["courses"] == 57 and stored["exams"] == 5          # Paper I is a course of its own
 
 
 @pytest.mark.django_db

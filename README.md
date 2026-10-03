@@ -51,7 +51,8 @@ once). They run last, because a live server empties the test database after each
 - **Phase 1, foundations:** every page of the site served at its old address. `docs/PHASE-1-REPORT.md`.
 - **Phase 2, accounts and progress:** sign-up, progress kept on the account and shown by the site's
   own progress script, the dashboard, export and deletion. `docs/PHASE-2-REPORT.md`.
-- **Phase 3, unit tests:** the question bank (950 questions, the doubtful keys never scored) and a
+- **Phase 3, unit tests:** the question bank (950 questions, the doubtful keys never scored; 1,150 since UGC NET Paper I was
+  approved on 3 October 2026) and a
   ten-question test on each unit that has enough checked questions. `docs/PHASE-3-REPORT.md`.
 - **Phase 4, old papers:** the three solved papers, practised one question at a time or sat as an
   exam under each paper's own recorded rules, with a review by section. `docs/PHASE-4-REPORT.md`.
@@ -60,9 +61,9 @@ once). They run last, because a live server empties the test database after each
   `docs/PHASE-5-REPORT.md`.
 - **Phase 6, the quality loop:** nightly item statistics (`manage.py item_stats`: p and r_pb, with
   questions that behave badly flagged for review), and the reviewers' queue in the admin, with the
-  two-person rule and a history of every change. `docs/PHASE-6-REPORT.md`.
+  two-person rule and a history of every change. Approved 3 October 2026. `docs/PHASE-6-REPORT.md`.
 - **Phase 7, the offline part:** MathJax served by the app, so the platform runs with the internet
   off; a strict Content Security Policy worked out per page; production logging and a 500 page; the
-  authorisation review; backup and restore; `pip-audit` and the coverage gate in CI.
-  `docs/PHASE-7-OFFLINE-REPORT.md`. What the host must do, and the owner's open decisions:
+  authorisation review; backup and restore; `pip-audit` and the coverage gate in CI. Approved 3 October
+  2026. `docs/PHASE-7-OFFLINE-REPORT.md`. What the host must do, and the owner's open decisions:
   `docs/DEPLOY.md`.
