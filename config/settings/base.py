@@ -130,7 +130,7 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_SIGNUP_FORM_CLASS = "apps.accounts.forms.SignupForm"
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
-ACCOUNT_EMAIL_SUBJECT_PREFIX = "NRSTATLAB: "
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "StatsTricks360: "
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
 LOGIN_URL = "/accounts/login/"
@@ -154,7 +154,7 @@ SOCIALACCOUNT_PROVIDERS = {
 # development); the provider is chosen before staging (ARCHITECTURE.md §9.2).
 EMAIL_CONFIG = env.email_url("EMAIL_URL", default="consolemail://")
 vars().update(EMAIL_CONFIG)
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="NRSTATLAB <no-reply@localhost>")
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="StatsTricks360 <no-reply@localhost>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # django-axes: lock an account/IP pair after 5 failures, for an hour. Only failed
@@ -171,7 +171,7 @@ AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = False
 
 # The admin needs a TOTP device when this is on (default in production).
 ADMIN_OTP_REQUIRED = env.bool("ADMIN_OTP_REQUIRED", default=False)
-OTP_TOTP_ISSUER = "NRSTATLAB"
+OTP_TOTP_ISSUER = "StatsTricks360"
 
 LANGUAGE_CODE = "en-gb"
 TIME_ZONE = "Asia/Kolkata"

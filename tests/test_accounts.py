@@ -40,7 +40,7 @@ def test_signup_creates_a_profile_and_sends_a_verification_email(client):
     assert not user.profile.browser_import_done
     [message] = mail.outbox
     assert message.to == ["ravi@example.com"] and "/accounts/confirm-email/" in message.body
-    assert "example.com" not in message.subject and message.subject.startswith("NRSTATLAB: ")
+    assert "example.com" not in message.subject and message.subject.startswith("StatsTricks360: ")
 
 
 def test_signup_form_shows_the_privacy_link(client):
@@ -168,7 +168,7 @@ def test_add_totp_device_prints_an_otpauth_uri(django_user_model, capsys):
 
 def test_the_site_record_is_named(settings):
     site = Site.objects.get(pk=settings.SITE_ID)
-    assert site.name == "NRSTATLAB" and site.domain != "example.com"
+    assert site.name == "StatsTricks360" and site.domain != "example.com"
 
 
 def test_privacy_page(client):

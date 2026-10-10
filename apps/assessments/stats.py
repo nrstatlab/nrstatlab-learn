@@ -132,6 +132,6 @@ def tell_reviewers(flagged):
     body = ("The nightly item statistics flagged these questions for review. They are out of every test "
             "until a reviewer approves or sends them back, in the review queue at /staff/assessments/reviewquestion/.\n\n"
             + "\n".join(lines) + "\n")
-    send_mail(f"[NRSTATLAB] {len(flagged)} question{'s' if len(flagged) != 1 else ''} flagged for review",
+    send_mail(f"[StatsTricks360] {len(flagged)} question{'s' if len(flagged) != 1 else ''} flagged for review",
               body, settings.DEFAULT_FROM_EMAIL, to)
     return to

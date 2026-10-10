@@ -1,4 +1,4 @@
-# Deploying NRSTATLAB Learn
+# Deploying StatsTricks360 Learn
 
 **Not yet used.** Nothing is online until the owner signs off `docs/LOCAL-CHECK.md` and chooses the
 host, the domain and the email provider (the open decisions, at the end). This page is what the
@@ -28,7 +28,7 @@ decision 2).
 | `SITE_ORIGIN` | `https://` and the domain: pages' canonical links and sitemap point here |
 | `SITE_BASE_PATH` | `/` |
 | `EMAIL_URL` | the provider's SMTP, e.g. `smtp+tls://USER:PASSWORD@smtp.example.com:587`. Required: production refuses to start without it |
-| `DEFAULT_FROM_EMAIL` | e.g. `NRSTATLAB <no-reply@DOMAIN>`, on a domain the provider may send for (SPF and DKIM set) |
+| `DEFAULT_FROM_EMAIL` | e.g. `StatsTricks360 <no-reply@DOMAIN>`, on a domain the provider may send for (SPF and DKIM set) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | the OAuth client, with `https://DOMAIN/accounts/google/login/callback/` as its redirect. Google sign-in is shown only when both are set |
 | `ADMIN_OTP_REQUIRED` | leave unset: production requires a TOTP code for the admin |
 

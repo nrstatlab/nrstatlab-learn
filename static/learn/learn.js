@@ -1,4 +1,4 @@
-/* NRSTATLAB Learn: connects the site's own progress script to a learner's account.
+/* StatsTricks360 Learn: connects the site's own progress script to a learner's account.
 
    assets/progress.js (in the content repository, unchanged) draws every progress
    mark from one localStorage entry, nrstatlab.progress.v1. This script runs

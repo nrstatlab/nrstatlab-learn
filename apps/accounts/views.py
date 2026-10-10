@@ -56,8 +56,8 @@ def delete(request):
     if request.method == "POST" and form.is_valid():
         email = user.email
         send_mail(
-            "NRSTATLAB: your account has been deleted",
-            "Your NRSTATLAB account and everything kept with it (your progress, your profile and your "
+            "StatsTricks360: your account has been deleted",
+            "Your StatsTricks360 account and everything kept with it (your progress, your profile and your "
             "sign-in details) have been deleted.\n\nThe study material is still free to read without an "
             "account. If you did not ask for this, reply through the site's GitHub Issues page.\n",
             None, [email])

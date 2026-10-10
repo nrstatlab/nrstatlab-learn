@@ -1,4 +1,4 @@
-/* NRSTATLAB Learn: the unit test page. Each answer is sent to the server as it is
+/* StatsTricks360 Learn: the unit test page. Each answer is sent to the server as it is
    chosen, so a dropped connection or a closed tab loses nothing. The form also
    posts every answer when it is submitted, so the page works without this. */
 (function () {

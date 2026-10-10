@@ -1,4 +1,4 @@
-# Checking NRSTATLAB Learn on your own computer
+# Checking StatsTricks360 Learn on your own computer
 
 The application is being built and checked **offline only**. Nothing of it is online:
 - the live site on GitHub Pages is unchanged;
@@ -76,7 +76,7 @@ A tip: use a private (incognito) window as a second browser, or as a second lear
 
 ### Phase 1: the site, served by the app
 
-- [ ] **1.1** http://localhost:8000 shows the NRSTATLAB home page, as on the live site.
+- [ ] **1.1** http://localhost:8000 shows the StatsTricks360 home page, as on the live site.
 - [ ] **1.2** Open a unit from the menu, for example Statistics → Descriptive Statistics → Unit 3.
   The page, its sections and its maths look as on the live site.
 - [ ] **1.3** The search box (the magnifier in the bar) finds a topic, say "median", and its

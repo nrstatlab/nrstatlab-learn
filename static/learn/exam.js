@@ -1,4 +1,4 @@
-/* NRSTATLAB Learn: an old paper in exam mode. Counts the answers given, marks them in
+/* StatsTricks360 Learn: an old paper in exam mode. Counts the answers given, marks them in
    the question grid, and, when the paper records its duration, shows the time left
    and submits the paper when it runs out. The deadline is the server's: the page only
    counts down to it, and the server refuses answers after it. */

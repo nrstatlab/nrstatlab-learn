@@ -1,6 +1,6 @@
-# NRSTATLAB Learn
+# StatsTricks360 Learn
 
-The Django web application for the NRSTATLAB study site. Visitors read everything free. Signed-in
+The Django web application for the StatsTricks360 study site. Visitors read everything free. Signed-in
 learners keep their progress, take a unit test after each unit, sit old papers, and see how ready
 they are for their exam.
 
