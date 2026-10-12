@@ -131,7 +131,9 @@ def test_the_five_maps_are_stored_at_the_counts_they_hold():
                     "page only": 0, "not here": 0},
         "csir-net": {"items": 52, "with a unit": 39, "page only": 4, "not here": 9},
         "asrb-net": {"items": 99, "with a unit": 73, "page only": 3, "not here": 23},
-        "iss": {"items": 147, "with a unit": 112, "page only": 9, "not here": 26},
+        # 12 October 2026: the two Paper III time-series lines (ACF/ARIMA estimation,
+        # spectral analysis) point at UGC NET Unit VII, which teaches them.
+        "iss": {"items": 147, "with a unit": 114, "page only": 9, "not here": 24},
         "appsc": {"items": 73, "with a unit": 73, "page only": 0, "not here": 0},
     }
 
