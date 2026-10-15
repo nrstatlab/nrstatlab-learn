@@ -85,7 +85,7 @@ def test_the_two_withdrawn_2022_questions_now_count():
 
 def test_the_june_2026_notes_are_folded_into_the_workings():
     assert "law of total variance" in Question.objects.get(uid="ugc-2026-q070").solution_html
-    assert "misprint" in Question.objects.get(uid="ugc-2026-q150").solution_html
+    assert "Read its exponent as" in Question.objects.get(uid="ugc-2026-q150").solution_html
     assert not Question.objects.filter(uid__startswith="ugc-2026-", solution_html__contains="class=\"flag\"").exists()
 
 
